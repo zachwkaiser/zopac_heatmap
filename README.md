@@ -16,6 +16,9 @@ We are using **React.js** as the client-side framework.
 - Getting started: [https://react.dev/learn](https://react.dev/learn)
 - Tutorial: [https://www.youtube.com/watch?v=SqcY0GlETPk&t=1880s](https://www.youtube.com/watch?v=SqcY0GlETPk&t=1880s)
 
+Figma
+- Link: [https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1](https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1)
+
 
 ## Wi-Fi scanning script
 Disclaimer:
