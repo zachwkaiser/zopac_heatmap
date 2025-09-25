@@ -9,8 +9,8 @@ This repository contains a **Next.js (App Router)** server skeleton under `serve
 
 ### How to run
 cd server
-pnpm install
-pnpm dev
+npm install next@latest react react-dom
+npm run dev
 
 App runs at: http://localhost:3000
 Example API route: http://localhost:3000/api/hello
