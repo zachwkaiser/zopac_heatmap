@@ -1,33 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useMemo } from 'react'
+import HeatMapPage from './components/heatmap'
+import LogInPage from './components/login'
+import SignUpPage from './components/signup'
+import NavBar from './components/navbar'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const navbarHeight = 60
+
+
+  const routes = useMemo(() => [
+    {
+      name: "Heat map",
+      element: <HeatMapPage/>
+    },
+    {
+      name: "Log in",
+      element: <LogInPage/>
+    },
+    {
+      name: "Sign up",
+      element: <SignUpPage/>
+    },
+  
+  ], [])
+
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <NavBar routes={routes} offset={navbarHeight} />
+      <div className="content">
+      {
+        routes.map((route) => (
+          <div key={route.name} id={route.name.toLowerCase().replace(/\s+/g, '-')}>
+            {route.element}
+          </div>
+        ))
+      }
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
