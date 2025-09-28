@@ -1,15 +1,19 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
+import HomePage from './components/homepage'
 import HeatMapPage from './components/heatmap'
 import LogInPage from './components/login'
-import SignUpPage from './components/signup'
 import NavBar from './components/navbar'
 import './App.css'
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('Home') // Start on home page
   const navbarHeight = 60
 
-
   const routes = useMemo(() => [
+    {
+      name: "Home",
+      element: <HomePage/>
+    },
     {
       name: "Heat map",
       element: <HeatMapPage/>
@@ -18,25 +22,19 @@ function App() {
       name: "Log in",
       element: <LogInPage/>
     },
-    {
-      name: "Sign up",
-      element: <SignUpPage/>
-    },
-  
   ], [])
 
+  const handleNavClick = (pageName) => {
+    setCurrentPage(pageName)
+  }
+
+  const currentPageElement = routes.find(route => route.name === currentPage)?.element
 
   return (
     <>
-      <NavBar routes={routes} offset={navbarHeight} />
-      <div className="content">
-      {
-        routes.map((route) => (
-          <div key={route.name} id={route.name.toLowerCase().replace(/\s+/g, '-')}>
-            {route.element}
-          </div>
-        ))
-      }
+      <NavBar routes={routes} onNavClick={handleNavClick} />
+      <div className="content" style={{ marginTop: `${navbarHeight}px` }}>
+        {currentPageElement}
       </div>
     </>
   )
