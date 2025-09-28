@@ -50,7 +50,7 @@ def _as_int(name: str, value, default: int) -> int:
         raise ValueError(f"{name} must be an integer, got {value!r}")
 
 def _validate_https(url: str):
-    """Helper function that will validate the URL is formatted correctly and uses HTTPS
+    """Helper function that will validate the URL is formatted correctly and uses HTTPS. ChatGPT helped create this since I am unfamiliar with urlparse
 
     Args:
         url (str): The URL string from the config file (SERVER_URL)
