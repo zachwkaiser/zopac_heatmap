@@ -29,7 +29,8 @@ class Config:
     batch_interval: int = 5
 
 def _as_int(name: str, value, default: int) -> int:
-    """Helper function that will convert values within the .env file from a string to an integer
+    """Helper function that will convert values within the .env file from a string to an integer. AI pointed out that this was needed to properly
+        read the .env file.
 
     Args:
         name (str): The name of the key within the config file. Primarily for error messages
