@@ -8,4 +8,4 @@ sudo ip link set "$IFACE" down
 sudo iw dev "$IFACE" set type monitor
 sudo ip link set "$IFACE" up
 
-echo "$IFACE is now in monitor mode"$
+echo "$IFACE is now in monitor mode"
