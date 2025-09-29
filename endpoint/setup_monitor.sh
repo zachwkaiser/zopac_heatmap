@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-IFACE = "${1:wlan1}"
+IFACE="${1:-wlan1}"
 echo "Setting interface $IFACE into monitor mode"
 
 sudo ip link set "$IFACE" down
