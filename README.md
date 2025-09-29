@@ -19,6 +19,16 @@ We are using **React.js** as the client-side framework.
 Figma
 - Link: [https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1](https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1)
 
+## Directions For Running Client
+
+First, install updated versions of npm and node:
+- Make sure to cd into the client folder first
+- run npm install
+- run sudo apt-get install -y nodejs
+- npm -v and node -v to check versions (must be using updated versions)
+
+Running Project:
+- While in the client folder, run "npm run dev" in the terminal, then click on the link provided.
 
 ## Wi-Fi scanning script
 Disclaimer:
