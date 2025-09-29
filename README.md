@@ -84,10 +84,6 @@ The endpoint repo contains all components needed to deploy a Raspberry Pi endpoi
 
 #  .env Establishment 
 1. Within the endpoint, copy the .env.example template to /etc/wifi-endpoint/.env and enter the fields with device specific information. 
-* ENDPOINT_ID = pi-OMICRON-01
-* WLAN_IFACE = wlan1
-* SERVER_URL = https://api.teamserver.com
-* API_KEY = secret
 2. Secure the changes within the CLI using:
 - sudo chown root:root /etc/wifi-endpoint/.env
 - sudo chmod 600 /etc/wifi-endpoint/.env
@@ -95,7 +91,7 @@ This ensures that only the root can read and write to these variables.
 
 # Set Wi-Fi Adapter in Monitor Mode
 1. Within the endpoint, create a directory and paste the setup_monitor.sh script.
-2. In the CLI use the command:
+2. In the CLI, navigate to the directory containing the script and use the command:
 - ./setup_monitor.sh wlan1
 3. Wi-Fi adapter is now in monitor mode.
 
@@ -106,7 +102,7 @@ If an error occurs, install tcpdump using:
 - sudo apt-get install -y tcpdump iw
 
 1. Within the endpoint, create a directory and paste the capture_wifi.sh script.
-2. In the CLI use the command:
+2. In the CLI, navigate to the directory containing the script and use the command:
 - ./capture_wifi.sh wlan1 ./captures
 3. The dongle will begin the capture Wi-Fi packets and save them to a log file within the /captures directory. 
 4. Use CTRL + C to terminate.
