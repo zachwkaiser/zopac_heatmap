@@ -19,7 +19,7 @@ We are using **React.js** as the client-side framework.
 Figma
 - Link: [https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1](https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1)
 
-## Directions For Running Client
+## Directions For Running Client & Linter
 
 First, install updated versions of npm and node:
 - Make sure to cd into the client folder first
@@ -29,6 +29,9 @@ First, install updated versions of npm and node:
 
 Running Project:
 - While in the client folder, run "npm run dev" in the terminal, then click on the link provided.
+
+Using ESLint:
+- We are using ESLint for this project. In order to run it properly, make sure to be in the client directory and use the "npm run lint" command. This will check hook usage, unused variables and imports, and code formatting issues.
 
 ## Wi-Fi scanning script
 Disclaimer:
