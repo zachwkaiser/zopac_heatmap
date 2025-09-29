@@ -15,3 +15,5 @@ npm run dev
 App runs at: http://localhost:3000
 Example API route: http://localhost:3000/api/hello
 
+### Linter used
+ESLint is being used as the Linter
