@@ -16,8 +16,6 @@ sudo ip link set $IFACE down
 sudo iw dev "$IFACE" set type monitor
 sudo ip link set "$IFACE" up
 
-sleep 2
-
 sudo iw dev $IFACE set channel 1
 
 ts="$(date +%Y%m%d_%H%M%S)"
