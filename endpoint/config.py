@@ -64,6 +64,14 @@ def _validate_https(url: str):
         raise ValueError("SERVER_URL must be a valid https URL")
 
 def load_config() -> Config:
+    """Function that initializes the configuration of the endpoint.
+
+    Raises:
+        ValueError: If an essential variable is missing from the .env file
+
+    Returns:
+        Config: Configuration object
+    """
     c = Config(
         endpoint_id= os.getenv("ENDPOINT_ID"),
         WLAN_iface= os.getenv("WLAN_IFACE"),
