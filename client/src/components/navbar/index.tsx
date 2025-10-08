@@ -1,9 +1,13 @@
-import React from 'react';
 import './style.css';
+import { Pages, Route } from '../../App';
 
-function NavBar(props) {
-  const handleClick = (e, routeName) => {
-    e.preventDefault()
+interface NavBarProps {
+  routes: Route[]
+  onNavClick: (pageName: Pages) => void
+}
+
+function NavBar(props: NavBarProps) {
+  const handleClick = (routeName: Pages) => {
     if (props.onNavClick) {
       props.onNavClick(routeName)
     }
@@ -15,10 +19,10 @@ function NavBar(props) {
         <div className="nav-links">
           {props.routes.map((route) => (
             <a 
-              key={route.name} 
+              key={route.name}
               href="#"
               className="nav-link"
-              onClick={(e) => handleClick(e, route.name)}
+              onClick={() => handleClick(route.name)}
             >
               {route.name}
             </a>

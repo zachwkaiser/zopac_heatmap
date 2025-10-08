@@ -1,0 +1,70 @@
+.root {
+  margin: 0;
+}
+
+.heatmap-page {
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  max-width: none;
+}
+
+.heatmap-row {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.information-container {
+  background-color: #f5f5f5;
+  color: black;
+  height: 100vh;
+  padding: 20px;
+  margin: 0;
+  flex: 0 0 25%;
+  display: flex;
+  flex-direction: column;
+}
+
+.heatmap-container {
+  background-color: white;
+  height: 100vh;
+  padding: 20px;
+  margin: 0;
+  flex: 0 0 75%;
+  display: flex;
+  flex-direction: column;
+}
+
+.button-container {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-button {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.endpoint-info {
+  margin-bottom: 20px;
+}
+
+.server-ip form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.server-ip input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
