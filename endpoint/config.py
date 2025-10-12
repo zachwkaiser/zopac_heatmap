@@ -81,7 +81,7 @@ def load_config() -> Config:
         update_channel= os.getenv("UPDATE_CHANNEL", "stable"),
         heartbeat_sec = _as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
         batch_max = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
-        batch_interval = _as_int("BATCH_INTERVAL", os.getenv("BATCH_INTERVAL"), 5),
+        batch_interval = _as_int("BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5)
     )
 
     # Requirement check
