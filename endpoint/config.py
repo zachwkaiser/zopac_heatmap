@@ -21,7 +21,7 @@ class Config:
     endpoint_id: str
     WLAN_iface: str
     server_URL: str
-    api_key = str
+    api_key: str
     log_level: str = "INFO"
     update_channel: str = "stable"
     heartbeat_sec: int = 30
@@ -77,25 +77,25 @@ def load_config() -> Config:
         WLAN_iface= os.getenv("WLAN_IFACE"),
         server_URL= os.getenv("SERVER_URL"),
         api_key = os.getenv("API_KEY"),
-        log= os.getenv("LOG_LEVEL"),
+        log_level= os.getenv("LOG_LEVEL", "INFO"),
         update_channel= os.getenv("UPDATE_CHANNEL", "stable"),
         heartbeat_sec = _as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
-        batch_max     = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
-        batch_interval_sec = _as_int("BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5),
+        batch_max = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
+        batch_interval = _as_int("BATCH_INTERVAL", os.getenv("BATCH_INTERVAL"), 5),
     )
 
     # Requirement check
     required = {
         "ENDPOINT_ID": c.endpoint_id,
-        "WLAN_IFACE": c.wlan_iface,
-        "SERVER_URL": c.server_url,
+        "WLAN_IFACE": c.WLAN_iface,
+        "SERVER_URL": c.server_URL,
         "API_KEY": c.api_key,
     }
 
     missing = []
 
     # Loop will identify any missing essential fields from the .env file
-    for key, value in required.items:
+    for key, value in required.items():
         if not value:
             missing.append(key)
 
