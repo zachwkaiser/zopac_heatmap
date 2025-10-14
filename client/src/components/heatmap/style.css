@@ -3,15 +3,15 @@
 }
 
 .heatmap-page {
-  height: 100vh;
+  height: calc(100vh - 80px);
   width: 100vw;
-  margin: 0;
+  margin-top: 0px;
   padding: 0;
   max-width: none;
 }
 
 .heatmap-row {
-  height: 100vh;
+  height: calc(100vh - 80px);
   margin: 0;
   padding: 0;
   display: flex;
@@ -21,17 +21,18 @@
 .information-container {
   background-color: #f5f5f5;
   color: black;
-  height: 100vh;
+  height: calc(100vh - 80px);
   padding: 20px;
   margin: 0;
   flex: 0 0 25%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 }
 
 .heatmap-container {
   background-color: white;
-  height: 100vh;
+  height: calc(100vh - 80px);
   padding: 20px;
   margin: 0;
   flex: 0 0 75%;
@@ -39,8 +40,13 @@
   flex-direction: column;
 }
 
+.top-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .button-container {
-  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -57,14 +63,38 @@
   margin-bottom: 20px;
 }
 
+.server-ip {
+  margin-top: auto;
+}
+
 .server-ip form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.server-ip input {
+.server-ip .input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.server-ip .form-control {
+  flex: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+.server-ip .dropdown-toggle {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.server-ip .form-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
 }
