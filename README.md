@@ -19,6 +19,19 @@ We are using **React.js** as the client-side framework.
 Figma
 - Link: [https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1](https://www.figma.com/design/fIM7rssNkcTu8GlbzKSGCP/Client_Wireframe_ZOPAC?node-id=3311-98&t=oJRJBoHaypjnCWg6-1)
 
+## Directions For Running Client & Linter
+
+First, install updated versions of npm and node:
+- Make sure to cd into the client folder first
+- run npm install
+- run sudo apt-get install -y nodejs
+- npm -v and node -v to check versions (must be using updated versions)
+
+Running Project:
+- While in the client folder, run "npm run dev" in the terminal, then click on the link provided.
+
+Using ESLint:
+- We are using ESLint for this project. In order to run it properly, make sure to be in the client directory and use the "npm run lint" command. This will check hook usage, unused variables and imports, and code formatting issues.
 
 ## Wi-Fi scanning script
 Disclaimer:
@@ -50,45 +63,59 @@ A Beacon is a signal sent out from the AP, to notify all other devices of its pr
 1758170263.747783 4057875us tsft 1.0 Mb/s 2412 MHz 11b -47dBm signal -47dBm signal antenna 0 0dBm signal antenna 1 0us BSSID:4a:d9:e7:b3:73:16 DA:ff:ff:ff:ff:ff:ff SA:4a:d9:e7:b3:73:16 Beacon (RAG XT) [1.0* 2.0* 5.5* 11.0* 6.0* 9.0 12.0* 18.0 Mbit] ESS CH: 1, PRIVACY
 
 
-    Field                           |    Functionality                              | Notes
-------------------------------------|-----------------------------------------------|--------------
-1758170264.362535                   | Capture Timestamp                             | All use this
-------------------------------------|-----------------------------------------------|--------------
-4674162us tsft                      | Time Synchronization Function Timer           | All use this
-------------------------------------|-----------------------------------------------|--------------
-11.0 Mb/s                           | Transmission fate                             | All use this
-------------------------------------|-----------------------------------------------|--------------
-2412 MHz                            | Frequency                                     | All use this
-------------------------------------|-----------------------------------------------|--------------
-11b                                 | modulation                                    | All use this
-------------------------------------|-----------------------------------------------|--------------
--51dBm signal                       | RSSI                                          | All use this
-------------------------------------|-----------------------------------------------|--------------
-antenna 0/1                         | What received the data                        | All use this
-------------------------------------|-----------------------------------------------|--------------
-Protected                           | The data is encrypted                         | All use this
-------------------------------------|-----------------------------------------------|--------------
-0us                                 | Radiotap Timing Field                         | All use this
-------------------------------------|-----------------------------------------------|--------------
-DA:01:00:5e:00:00:01|               | Destination address                           | All use this
-------------------------------------|-----------------------------------------------|--------------
-BSSID:4a:d9:e7:b3:73:16             | AP MAC address                                | All use this
-------------------------------------|-----------------------------------------------|--------------
-SA:c8:94:02:6f:cc:9f                | Source of the data                            | All use this
-------------------------------------|-----------------------------------------------|--------------
-Data IV:b42a Pad 20 KeyID 1         | Padding, encryption type, key                 | All use this
-------------------------------------|-----------------------------------------------|--------------
-Beacon (RAG XT)                     | Name of the beacon                            | Beacon only
-------------------------------------|-----------------------------------------------|--------------
-ESS CH: 1                           | Infrastructure and channel number             | Beacon only
-------------------------------------|-----------------------------------------------|--------------
-PRIVACY                             | Encryption required                           | Beacon only
-------------------------------------|-----------------------------------------------|--------------
-Probe Request (MySpectrumWiFiD0-2G) | Client searching for an AP                    | Probe only; this is the probe asking if there is an AP with that name
+## Wi-Fi Packet Fields
+| Field                            | Functionality                          | Notes                      |
+|----------------------------------|----------------------------------------|----------------------------|
+| 1758170264.362535                 | Capture Timestamp                      | All use this               |
+| 4674162us tsft                    | Time Synchronization Function Timer    | All use this               |
+| 11.0 Mb/s                         | Transmission rate                      | All use this               |
+| 2412 MHz                          | Frequency                              | All use this               |
+| 11b                               | Modulation                             | All use this               |
+| -51dBm signal                     | RSSI                                   | All use this               |
+| antenna 0/1                       | Which antenna received the data        | All use this               |
+| Protected                         | The data is encrypted                  | All use this               |
+| 0us                               | Radiotap Timing Field                  | All use this               |
+| DA:01:00:5e:00:00:01              | Destination address                    | All use this               |
+| BSSID:4a:d9:e7:b3:73:16           | AP MAC address                         | All use this               |
+| SA:c8:94:02:6f:cc:9f              | Source of the data                     | All use this               |
+| Data IV:b42a Pad 20 KeyID 1       | Padding, encryption type, key info     | All use this               |
+| Beacon (RAG XT)                   | Name of the beacon                     | Beacon only                |
+| ESS CH: 1                         | Infrastructure and channel number      | Beacon only                |
+| PRIVACY                           | Encryption required                    | Beacon only                |
+| Probe Request (MySpectrumWiFiD0-2G)| Client searching for an AP            | Probe only (probe asking)  |
+that name
 
 **Sources**
-https://www.cisco.com/en/US/docs/wireless/wlan_adapter/secure_client/5.1.0/administration/guide/C1_Network_Security.html
-https://howiwifi.com/2020/07/13/802-11-frame-types-and-formats/
-https://askubuntu.com/questions/751547/simple-script-for-monitoring-wireless-status
-Google AI overview was read for most searches preformed
-ChatGPT was used to explain specific questions
+- [Cisco: Network Security Guide](https://www.cisco.com/en/US/docs/wireless/wlan_adapter/secure_client/5.1.0/administration/guide/C1_Network_Security.html)  
+- [How I WiFi: 802.11 Frame Types and Formats](https://howiwifi.com/2020/07/13/802-11-frame-types-and-formats/)  
+- [AskUbuntu: Simple Script for Monitoring Wireless Status](https://askubuntu.com/questions/751547/simple-script-for-monitoring-wireless-status)  
+- Google AI overview was used while researching
+- ChatGPT was used to explain specific questions while researching
+
+## Endpoint Configuration
+The endpoint repo contains all components needed to deploy a Raspberry Pi endpoint to capture Wi-Fi data.
+
+#  .env Establishment 
+1. Within the endpoint, copy the .env.example template to /etc/wifi-endpoint/.env and enter the fields with device specific information. 
+2. Secure the changes within the CLI using:
+- sudo chown root:root /etc/wifi-endpoint/.env
+- sudo chmod 600 /etc/wifi-endpoint/.env
+This ensures that only the root can read and write to these variables.
+
+# Set Wi-Fi Adapter in Monitor Mode
+1. Within the endpoint, create a directory and paste the setup_monitor.sh script.
+2. In the CLI, navigate to the directory containing the script and use the command:
+- ./setup_monitor.sh wlan1
+3. Wi-Fi adapter is now in monitor mode.
+
+# Capture packets with tcpdump
+Note: Ensure that tcpdump is installed on the local device by first executing:
+- sudo tcpdump
+If an error occurs, install tcpdump using:
+- sudo apt-get install -y tcpdump iw
+
+1. Within the endpoint, create a directory and paste the capture_wifi.sh script.
+2. In the CLI, navigate to the directory containing the script and use the command:
+- ./capture_wifi.sh wlan1 ./captures
+3. The dongle will begin the capture Wi-Fi packets and save them to a log file within the /captures directory. 
+4. Use CTRL + C to terminate.
