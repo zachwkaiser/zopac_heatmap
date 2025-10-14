@@ -1,23 +1,43 @@
 import React, { useState } from 'react';
 import './style.css';
 
-function HomePage() {
+function HomePage({ setIsAuthenticated, isAuthenticated }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false); // Toggle between forms
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [testCredentials, setTestCredentials] = useState({
+    username: 'admin@gmail.com',
+    password: 'password',
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (isCreatingAccount) {
-      console.log('Creating account with:', email, password);
-      alert('Account created successfully!');
+      setTestCredentials({ username: email, password });
+      alert('Account created successfully! You can now log in with your new credentials.');
+      setIsCreatingAccount(false);
     } else {
-      console.log('Logging in with:', email, password);
-      alert('Login successful!');
+      if (email === testCredentials.username && password === testCredentials.password) {
+        setIsAuthenticated(true);
+        alert('Login successful!');
+      } else {
+        alert('Invalid email or password. Please try again.');
+      }
     }
+
     setEmail('');
     setPassword('');
   };
+
+  if (isAuthenticated) {
+    return (
+      <div className="homepage">
+        <h1>Welcome to the ZOPAC Heat Map Dashboard!</h1>
+        <p>You are now logged in and can access the rest of the website.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="homepage">

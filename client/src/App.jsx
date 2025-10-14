@@ -1,34 +1,43 @@
-import { useState, useMemo } from 'react'
-import HomePage from './components/homepage'
-import HeatMapPage from './components/heatmap'
-import LogInPage from './components/login'
-import NavBar from './components/navbar'
-import './App.css'
+import { useState, useMemo, useEffect } from 'react';
+import HomePage from './components/homepage';
+import HeatMapPage from './components/heatmap';
+import LogInPage from './components/login';
+import NavBar from './components/navbar';
+import './App.css';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('Home') // Start on home page
-  const navbarHeight = 60
+  const [currentPage, setCurrentPage] = useState('Home');
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => JSON.parse(localStorage.getItem('isAuthenticated')) || false);
+  const navbarHeight = 60;
 
-  const routes = useMemo(() => [
-    {
-      name: "Home",
-      element: <HomePage/>
-    },
-    {
-      name: "Heat map",
-      element: <HeatMapPage/>
-    },
-    {
-      name: "Log in",
-      element: <LogInPage/>
-    },
-  ], [])
+  useEffect(() => {
+    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
+  }, [isAuthenticated]);
+
+  const routes = useMemo(
+    () => [
+      {
+        name: 'Home',
+        element: <HomePage setIsAuthenticated={setIsAuthenticated} isAuthenticated={isAuthenticated} />,
+      },
+      {
+        name: 'Heat map',
+        element: isAuthenticated ? <HeatMapPage /> : <p>Please log in to access this page.</p>,
+      },
+      {
+        name: 'Log in',
+        element: isAuthenticated ? <LogInPage /> : <p>Please log in to access this page.</p>,
+      },
+    ],
+    [isAuthenticated]
+  );
 
   const handleNavClick = (pageName) => {
-    setCurrentPage(pageName)
-  }
+    setCurrentPage(pageName);
+  };
 
-  const currentPageElement = routes.find(route => route.name === currentPage)?.element
+  const currentPageElement = routes.find((route) => route.name === currentPage)?.element;
 
   return (
     <>
@@ -37,7 +46,7 @@ function App() {
         {currentPageElement}
       </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
