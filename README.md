@@ -93,7 +93,7 @@ that name
 - ChatGPT was used to explain specific questions while researching
 
 ## Endpoint Linter
-The linter being used for the endpoint is Ruff, Flake8, and Black.
+The linter being used for the endpoint is Ruff and Black.
 
 ## Endpoint Configuration
 The endpoint repo contains all components needed to deploy a Raspberry Pi endpoint to capture Wi-Fi data.
