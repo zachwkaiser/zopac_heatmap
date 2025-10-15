@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Container, Row, Col, Button, Form, Dropdown, Alert } from 'react-bootstrap';
 import './style.css';
 
@@ -55,7 +55,6 @@ function HeatMapPage() {
     e.preventDefault();
     if (serverIP.trim()) {
       sendToAPI(serverIP.trim());
-      setServerIP('');
     }
   };
 
@@ -96,7 +95,7 @@ function HeatMapPage() {
                   />
                   <Dropdown>
                     <Dropdown.Toggle variant="outline-secondary" id="dropdown-basic">
-                      Previous
+                      Saved Server IP's
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       {previousEntries.length > 0 ? (
@@ -109,7 +108,7 @@ function HeatMapPage() {
                           </Dropdown.Item>
                         ))
                       ) : (
-                        <Dropdown.Item disabled>No previous entries</Dropdown.Item>
+                        <Dropdown.Item className='disabled' disabled>No previous entries</Dropdown.Item>
                       )}
                     </Dropdown.Menu>
                   </Dropdown>

@@ -7,7 +7,8 @@
   width: 100vw;
   margin-top: 0px;
   padding: 0;
-  max-width: none;
+  overflow: hidden;
+
 }
 
 .heatmap-row {
@@ -19,7 +20,7 @@
 }
 
 .information-container {
-  background-color: #f5f5f5;
+  background-color: #737373;
   color: black;
   height: calc(100vh - 80px);
   padding: 20px;
@@ -65,6 +66,8 @@
 
 .server-ip {
   margin-top: auto;
+  margin-bottom: 30px;
+
 }
 
 .server-ip form {
@@ -93,8 +96,17 @@
   background-color: white;
 }
 
+.dropdown-toggle {
+  color: black;
+  font-size: 12px;
+}
+
 .server-ip .form-label {
   font-weight: 500;
   margin-bottom: 8px;
   color: #333;
+}
+
+.disabled {
+  color: #ff0000;
 }

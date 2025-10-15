@@ -2,14 +2,14 @@ import './style.css';
 import { Pages, Route } from '../../App';
 
 interface NavBarProps {
-  routes: Route[]
+  routes: Route[];
   onNavClick: (pageName: Pages) => void
 }
 
 function NavBar(props: NavBarProps) {
   const handleClick = (routeName: Pages) => {
     if (props.onNavClick) {
-      props.onNavClick(routeName)
+      props.onNavClick(routeName);
     }
   }
 
