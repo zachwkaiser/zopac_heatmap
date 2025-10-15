@@ -1,36 +1,38 @@
+import React from 'react';
 import './style.css';
-import { Pages, Route } from '../../App';
+import { Pages } from '../../App';
 
 interface NavBarProps {
-  routes: Route[];
-  onNavClick: (pageName: Pages) => void
+  routes: { name: Pages; element: React.ReactNode }[];
+  onNavClick: (pageName: Pages) => void;
+  onLogout?: () => void;
+  activePage: Pages;
 }
 
-function NavBar(props: NavBarProps) {
-  const handleClick = (routeName: Pages) => {
-    if (props.onNavClick) {
-      props.onNavClick(routeName);
-    }
-  }
-
+const NavBar: React.FC<NavBarProps> = ({ routes, onNavClick, onLogout, activePage }) => {
   return (
     <nav className="navbar">
-      <div className="nav-container">
-        <div className="nav-links">
-          {props.routes.map((route) => (
-            <a 
-              key={route.name}
-              href="#"
-              className="nav-link"
-              onClick={() => handleClick(route.name)}
+      <ul className="navbar-list">
+        {routes.map((route) => (
+          <li key={route.name} className="navbar-item">
+            <button
+              className={`navbar-link ${activePage === route.name ? 'active' : ''}`}
+              onClick={() => onNavClick(route.name)}
             >
               {route.name}
-            </a>
-          ))}
-        </div>
-      </div>
+            </button>
+          </li>
+        ))}
+        {onLogout && (
+          <li className="navbar-item">
+            <button className="navbar-link" onClick={onLogout}>
+              Log Out
+            </button>
+          </li>
+        )}
+      </ul>
     </nav>
   );
-}
+};
 
 export default NavBar;
