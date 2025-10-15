@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import './style.css';
 
-function HomePage({ setIsAuthenticated, isAuthenticated }) {
+interface HomePageProps {
+  setIsAuthenticated: (value: boolean) => void;
+  isAuthenticated: boolean;
+}
+
+function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
@@ -10,7 +15,7 @@ function HomePage({ setIsAuthenticated, isAuthenticated }) {
     password: 'password',
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (isCreatingAccount) {

@@ -1,6 +1,10 @@
 {
   "dependencies": {
+    "eslint": "^9.37.0",
     "react-bootstrap": "^2.10.10",
     "react-router-dom": "^7.9.3"
+  },
+  "devDependencies": {
+    "jiti": "^2.6.1"
   }
 }

@@ -33,3 +33,6 @@ pnpm-debug.log*
 # TypeScript
 # next-env.d.ts should be committed
 *.tsbuildinfo
+
+.env
+.vscode/
