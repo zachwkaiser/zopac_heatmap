@@ -92,23 +92,26 @@ that name
 - Google AI overview was used while researching
 - ChatGPT was used to explain specific questions while researching
 
+## Endpoint Linter
+The linter being used for the endpoint is Ruff and Black.
+
 ## Endpoint Configuration
 The endpoint repo contains all components needed to deploy a Raspberry Pi endpoint to capture Wi-Fi data.
 
-#  .env Establishment 
+###  .env Establishment 
 1. Within the endpoint, copy the .env.example template to /etc/wifi-endpoint/.env and enter the fields with device specific information. 
 2. Secure the changes within the CLI using:
 - sudo chown root:root /etc/wifi-endpoint/.env
 - sudo chmod 600 /etc/wifi-endpoint/.env
 This ensures that only the root can read and write to these variables.
 
-# Set Wi-Fi Adapter in Monitor Mode
+### Set Wi-Fi Adapter in Monitor Mode
 1. Within the endpoint, create a directory and paste the setup_monitor.sh script.
 2. In the CLI, navigate to the directory containing the script and use the command:
 - ./setup_monitor.sh wlan1
 3. Wi-Fi adapter is now in monitor mode.
 
-# Capture packets with tcpdump
+### Capture packets with tcpdump
 Note: Ensure that tcpdump is installed on the local device by first executing:
 - sudo tcpdump
 If an error occurs, install tcpdump using:
