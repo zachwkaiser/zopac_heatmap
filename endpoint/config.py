@@ -2,9 +2,10 @@ from dataclasses import dataclass
 import os
 from urllib.parse import urlparse
 
-@dataclass (frozen=True)
+
+@dataclass(frozen=True)
 class Config:
-    """Class representing the endpoint configuration. Each field relates to a setting from the .env file. AI was used to suggest the update channel 
+    """Class representing the endpoint configuration. Each field relates to a setting from the .env file. AI was used to suggest the update channel
        and log level
 
     Attributes:
@@ -18,6 +19,7 @@ class Config:
     batch_max (int) Maximum number of log records to send during the boot process
     batch_interval (int) Maximum time to wait before sending a batch. Defaults to 5 sec
     """
+
     endpoint_id: str
     WLAN_iface: str
     server_URL: str
@@ -27,6 +29,7 @@ class Config:
     heartbeat_sec: int = 30
     batch_max: int = 200
     batch_interval: int = 5
+
 
 def _as_int(name: str, value, default: int) -> int:
     """Helper function that will convert values within the .env file from a string to an integer. AI pointed out that this was needed to properly
@@ -43,12 +46,13 @@ def _as_int(name: str, value, default: int) -> int:
     Returns:
         int: integer representation of values within the .env file
     """
-    if value is None: 
+    if value is None:
         return default
     try:
         return int(value)
     except ValueError:
         raise ValueError(f"{name} must be an integer, got {value!r}")
+
 
 def _validate_https(url: str):
     """Helper function that will validate the URL is formatted correctly and uses HTTPS. ChatGPT helped create this since I am unfamiliar with urlparse
@@ -63,6 +67,7 @@ def _validate_https(url: str):
     if p.scheme != "https" or not p.netloc:
         raise ValueError("SERVER_URL must be a valid https URL")
 
+
 def load_config() -> Config:
     """Function that initializes the configuration of the endpoint.
 
@@ -73,15 +78,17 @@ def load_config() -> Config:
         Config: Configuration object
     """
     c = Config(
-        endpoint_id= os.getenv("ENDPOINT_ID"),
-        WLAN_iface= os.getenv("WLAN_IFACE"),
-        server_URL= os.getenv("SERVER_URL"),
-        api_key = os.getenv("API_KEY"),
-        log_level= os.getenv("LOG_LEVEL", "INFO"),
-        update_channel= os.getenv("UPDATE_CHANNEL", "stable"),
-        heartbeat_sec = _as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
-        batch_max = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
-        batch_interval = _as_int("BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5)
+        endpoint_id=os.getenv("ENDPOINT_ID"),
+        WLAN_iface=os.getenv("WLAN_IFACE"),
+        server_URL=os.getenv("SERVER_URL"),
+        api_key=os.getenv("API_KEY"),
+        log_level=os.getenv("LOG_LEVEL", "INFO"),
+        update_channel=os.getenv("UPDATE_CHANNEL", "stable"),
+        heartbeat_sec=_as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
+        batch_max=_as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
+        batch_interval=_as_int(
+            "BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5
+        ),
     )
 
     # Requirement check
@@ -101,6 +108,6 @@ def load_config() -> Config:
 
     if missing:
         raise ValueError(f"Missing required settings: {', '.join(missing)}")
-    
+
     _validate_https(c.server_URL)
     return c
