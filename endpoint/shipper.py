@@ -7,9 +7,12 @@ import requests
 
 class Shipper:
     def __init__(self, server_url, api_key, batch_size, flush_ms, timeout_s, use_gzip=True):
-        self.url = server_url; self.batch_size = batch_size
-        self.flush_ms = flush_ms/1000.0; self.timeout = timeout_s
-        self.use_gzip = use_gzip; self.q = queue.Queue(maxsize=5000)
+        self.url = server_url
+        self.batch_size = batch_size
+        self.flush_ms = flush_ms/1000.0
+        self.timeout = timeout_s
+        self.use_gzip = use_gzip
+        self.q = queue.Queue(maxsize=5000)
         self.stop_evt = threading.Event()
         self.sess = requests.Session()
         self.headers = {"Accept":"application/json","Content-Type":"application/json"}
