@@ -1,0 +1,112 @@
+.root {
+  margin: 0;
+}
+
+.heatmap-page {
+  height: calc(100vh - 80px);
+  width: 100vw;
+  margin-top: 0px;
+  padding: 0;
+  overflow: hidden;
+
+}
+
+.heatmap-row {
+  height: calc(100vh - 80px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+}
+
+.information-container {
+  background-color: #737373;
+  color: black;
+  height: calc(100vh - 80px);
+  padding: 20px;
+  margin: 0;
+  flex: 0 0 25%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.heatmap-container {
+  background-color: white;
+  height: calc(100vh - 80px);
+  padding: 20px;
+  margin: 0;
+  flex: 0 0 75%;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.info-button {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.endpoint-info {
+  margin-bottom: 20px;
+}
+
+.server-ip {
+  margin-top: auto;
+  margin-bottom: 30px;
+
+}
+
+.server-ip form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.server-ip .input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.server-ip .form-control {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.server-ip .dropdown-toggle {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.dropdown-toggle {
+  color: black;
+  font-size: 12px;
+}
+
+.server-ip .form-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.disabled {
+  color: #ff0000;
+}
