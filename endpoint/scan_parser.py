@@ -1,7 +1,7 @@
-#import json
+import json
 import re
-#import sys
-#import time
+import sys
+import time
 
 # initializing what the re library will be searching for within each line of the scan data
 TS_RE   = re.compile(r'^(\d+\.\d{3,})')
@@ -37,3 +37,19 @@ def parse_line(line: str) -> dict:
         "rssi" : rssi,
         "ts" : ts
     }
+
+def stream(stdin):
+    """This function reads each line of the scan data as it is being captured by the shell script. 
+
+    Args:
+        stdin: The standard input stream that is being piped from the shell script.
+    """
+    metrics = {"seen": 0, "emitted": 0, "dropped": 0}
+    for line in stdin:
+        metrics["seen"] += 1
+        parsed = parse_line(line)
+        if parsed is None:
+            metrics["dropped"] += 1
+            continue
+        metrics["emitted"] += 1
+        yield parsed
