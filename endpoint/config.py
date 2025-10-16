@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 
+load_dotenv()  # take environment variables from .env file
 
 @dataclass(frozen=True)
 class Config:
@@ -78,10 +80,10 @@ def load_config() -> Config:
         Config: Configuration object
     """
     c = Config(
-        endpoint_id=os.getenv("ENDPOINT_ID"),
-        WLAN_iface=os.getenv("WLAN_IFACE"),
-        server_URL=os.getenv("SERVER_URL"),
-        api_key=os.getenv("API_KEY"),
+        endpoint_id=os.getenv("ENDPOINT_ID").strip() or None,
+        WLAN_iface=os.getenv("WLAN_IFACE").strip() or None,
+        server_URL=os.getenv("SERVER_URL").strip() or None,
+        api_key=os.getenv("API_KEY").strip() or None,
         log_level=os.getenv("LOG_LEVEL", "INFO"),
         update_channel=os.getenv("UPDATE_CHANNEL", "stable"),
         heartbeat_sec=_as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
