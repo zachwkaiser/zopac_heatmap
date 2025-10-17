@@ -21,7 +21,6 @@ class Config:
     batch_max (int) Maximum number of log records to send during the boot process
     batch_interval (int) Maximum time to wait before sending a batch. Defaults to 5 sec
     """
-
     endpoint_id: str
     WLAN_iface: str
     server_URL: str

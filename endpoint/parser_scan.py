@@ -14,6 +14,7 @@ def stream(stdin):
     ship = Shipper(
         server_url=cfg.server_URL,
         api_key=cfg.api_key,
+        endpoint_id=cfg.endpoint_id,
         batch_size=cfg.batch_max,
         flush_ms=cfg.batch_interval * 1000,       # convert seconds → milliseconds
         timeout_s=cfg.heartbeat_sec,
