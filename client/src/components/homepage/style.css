@@ -1,70 +1,143 @@
+:root {
+  --bg-0: #0b1220;
+  --bg-1: #0f172a;
+  --card: rgba(14, 19, 33, 0.6);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --primary-0: #6366f1;
+  --primary-1: #22d3ee;
+}
+
 .homepage {
+  position: relative;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  padding: 2rem 1rem;
+  color: var(--text);
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(34, 211, 238, 0.15), transparent 60%),
+              radial-gradient(1000px 600px at 110% 10%, rgba(99, 102, 241, 0.15), transparent 60%),
+              linear-gradient(135deg, var(--bg-0), var(--bg-1));
+  overflow: hidden;
+}
+
+.homepage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: radial-gradient(circle at 50% 50%, black, transparent 70%);
+  pointer-events: none;
+}
+
+.homepage h1 {
+  margin: 0.5rem 0 0.25rem;
+  font-size: clamp(1.75rem, 2.5vw + 1rem, 2.5rem);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  background: linear-gradient(90deg, #fff, #c7d2fe, #a5f3fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.homepage .tagline {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
 }
 
 .login-form {
-  margin-top: 20px;
+  margin-top: 16px;
   width: 100%;
-  max-width: 400px;
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 440px;
+  background: var(--card);
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow:
+    0 20px 60px -20px rgba(0, 0, 0, 0.6),
+    inset 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+  text-align: left;
 }
 
 label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #333;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #cbd5e1;
 }
 
 input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 10px;
   box-sizing: border-box;
-  font-size: 14px;
+  font-size: 15px;
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--text);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+input::placeholder {
+  color: #94a3b8;
 }
 
 input:focus {
-  border-color: #007BFF;
   outline: none;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  background: rgba(2, 6, 23, 0.75);
 }
 
 button {
-  padding: 10px 20px;
-  background-color: #007BFF;
-  color: white;
+  padding: 12px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
   width: 100%;
 }
 
-button:hover {
-  background-color: #0056b3;
+/* Primary submit button */
+button[type="submit"] {
+  background: linear-gradient(135deg, var(--primary-0), var(--primary-1));
+  color: white;
+  box-shadow: 0 10px 24px -10px rgba(34, 211, 238, 0.6), 0 4px 10px -6px rgba(99, 102, 241, 0.6);
+  transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
+button[type="submit"]:hover {
+  filter: brightness(1.05);
+}
+
+button[type="submit"]:active {
+  transform: translateY(1px);
+}
+
+/* Secondary toggle button */
 .toggle-button {
-  background-color: #6c757d;
-  margin-top: 10px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  margin-top: 12px;
   max-width: 440px;
 }
 
 .toggle-button:hover {
-  background-color: #5a6268;
+  background: rgba(148, 163, 184, 0.1);
 }
 
