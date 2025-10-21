@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { authConfig } from './auth.config';
 import { z } from 'zod';
 import postgres from 'postgres';
@@ -27,6 +28,11 @@ async function getUser(email: string): Promise<User | undefined> {
 export const { auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
