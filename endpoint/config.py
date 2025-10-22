@@ -22,8 +22,8 @@ class Config:
     batch_interval (int) Maximum time to wait before sending a batch. Defaults to 5 sec
     """
     endpoint_id: str
-    WLAN_iface: str
-    server_URL: str
+    wlan_iface: str
+    server_url: str
     api_key: str
     log_level: str = "INFO"
     update_channel: str = "stable"
@@ -31,6 +31,13 @@ class Config:
     batch_max: int = 200
     batch_interval: int = 5
 
+
+def _require(env_name: str) -> str:
+    val = os.getenv(env_name, "").strip()
+    if not val:
+        raise ValueError(f"Missing required setting: {env_name}")
+    return val
+    
 
 def _as_int(name: str, value, default: int) -> int:
     """Helper function that will convert values within the .env file from a string to an integer. AI pointed out that this was needed to properly
@@ -78,37 +85,36 @@ def load_config() -> Config:
     Returns:
         Config: Configuration object
     """
-    c = Config(
-        endpoint_id=os.getenv("ENDPOINT_ID").strip() or None,
-        WLAN_iface=os.getenv("WLAN_IFACE").strip() or None,
-        server_URL=os.getenv("SERVER_URL").strip() or None,
-        api_key=os.getenv("API_KEY").strip() or None,
-        log_level=os.getenv("LOG_LEVEL", "INFO"),
-        update_channel=os.getenv("UPDATE_CHANNEL", "stable"),
-        heartbeat_sec=_as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
-        batch_max=_as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
-        batch_interval=_as_int(
-            "BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5
-        ),
+    # Required values
+    endpoint_id = _require("ENDPOINT_ID")
+    wlan_iface = _require("WLAN_IFACE")
+    server_url = _require("SERVER_URL")
+    api_key = _require("API_KEY")
+
+    # Validate HTTPS URL
+    _validate_https(server_url)
+
+    # Optional values
+    log_level = os.getenv("LOG_LEVEL", "INFO").strip().upper()
+    update_channel = os.getenv("UPDATE_CHANNEL", "stable").strip()
+    heartbeat_sec = _as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30)
+    batch_max = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200)
+    batch_interval = _as_int("BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5)
+
+    # Validate log level
+    valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+    if log_level not in valid_levels:
+        raise ValueError(f"LOG_LEVEL must be one of {valid_levels}, got {log_level!r}")
+
+    # Return a validated, immutable Config instance
+    return Config(
+        endpoint_id=endpoint_id,
+        wlan_iface=wlan_iface,
+        server_url=server_url,
+        api_key=api_key,
+        log_level=log_level,
+        update_channel=update_channel,
+        heartbeat_sec=heartbeat_sec,
+        batch_max=batch_max,
+        batch_interval=batch_interval,
     )
-
-    # Requirement check
-    required = {
-        "ENDPOINT_ID": c.endpoint_id,
-        "WLAN_IFACE": c.WLAN_iface,
-        "SERVER_URL": c.server_URL,
-        "API_KEY": c.api_key,
-    }
-
-    missing = []
-
-    # Loop will identify any missing essential fields from the .env file
-    for key, value in required.items():
-        if not value:
-            missing.append(key)
-
-    if missing:
-        raise ValueError(f"Missing required settings: {', '.join(missing)}")
-
-    _validate_https(c.server_URL)
-    return c
