@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button, Form, Dropdown, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
 import './style.css';
 
 function HeatMapPage() {
@@ -7,6 +7,9 @@ function HeatMapPage() {
   const [previousEntries, setPreviousEntries] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [showMapUpload, setShowMapUpload] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
 
   // API function to send data to Postman mock endpoint
@@ -63,6 +66,38 @@ function HeatMapPage() {
     setServerIP(selectedIP);
   };
 
+  // Handle file selection (store file but don't process yet)
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const target = e.target as HTMLInputElement;
+    const file = target.files?.[0];
+    
+    if (file) {
+      console.log('Selected file:', file.name);
+      setSelectedFile(file);
+    }
+  };
+
+  // Handle upload button click - process the selected file
+  const handleUploadClick = () => {
+    if (selectedFile) {
+      // Check if it's an image file
+      if (selectedFile.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          setUploadedImage(result);
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        console.log('Non-image file selected:', selectedFile.name);
+        // Handle PDF or other file types here if needed
+      }
+      
+      // Close modal after upload
+      setShowMapUpload(false);
+    }
+  };
+
   return (
     <Container fluid className='heatmap-page'>
       <Row className='heatmap-row'>
@@ -70,7 +105,40 @@ function HeatMapPage() {
           <div className='top-content'>
             <div className='button-container'>
               <Button className='info-button'>Settings</Button>
-              <Button className='info-button'>Change Map</Button>
+              
+              <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
+              <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered>
+                <Modal.Header>
+                  <Modal.Title>Upload Map</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Select Map File</Form.Label>
+                    <Form.Control
+                      type="file"
+                      accept=".jpg,.pdf"
+                      onChange={handleFileUpload}
+                    />
+                    <Form.Text className="text-muted">
+                      Supported formats: JPG, PDF
+                    </Form.Text>
+                  </Form.Group>
+                  <div className="d-flex justify-content-center gap-4">
+                    <Button 
+                      variant="primary" 
+                      className="upload-btn"
+                      onClick={handleUploadClick}
+                      disabled={!selectedFile}
+                    >
+                      Upload Map
+                    </Button>
+                    <Button variant="secondary" className="cancel-btn" onClick={() => setShowMapUpload(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </Modal.Body>
+              </Modal>
+
             </div>
             <Row className='endpoint-info'>
               <p>Endpoint info goes here</p>
@@ -120,13 +188,17 @@ function HeatMapPage() {
                 disabled={isLoading}
                 className="w-100"
               >
-                {isLoading ? 'Sending...' : 'Save'}
+                {isLoading ? 'Sending...' : 'Set Server IP'}
               </Button>
             </Form>
           </Row>
         </Col>
-        <Col className='heatmap-container' lg={9}>
-          <h1>Heatmap area</h1>
+        <Col className='heatmap-container' lg={9} style={{
+          backgroundImage: uploadedImage ? `url(${uploadedImage})` : 'none',
+          backgroundSize: 'contain',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}>
         </Col>
       </Row>
     </Container>
