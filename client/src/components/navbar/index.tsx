@@ -24,7 +24,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, onNavClick, onLogout, activePag
           </li>
         ))}
         {onLogout && (
-          <li className="navbar-item">
+          <li className="navbar-item logout-item">
             <button className="navbar-link" onClick={onLogout}>
               Log Out
             </button>

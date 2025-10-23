@@ -22,11 +22,21 @@
   list-style: none;
   display: flex;
   margin: 0;
-  padding: 0;
+  padding: 0 4rem;
+  position: relative;
+  justify-content: center;
+  width: 100%;
 }
 
 .navbar-item {
   margin: 0 10px;
+}
+
+.logout-item {
+  position: absolute;
+  right: 1rem;
+  background: linear-gradient(135deg, var(--primary-0), var(--primary-1));
+  border-radius: 4px;
 }
 
 .navbar-link {
