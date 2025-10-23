@@ -154,3 +154,110 @@ const response = await fetch('http://localhost:3000/api/client/server-ip', {
 });
 ```
 
+
+### Wi-Fi Scan Data Endpoint (Sprint 3 - User Story #23)
+
+**Endpoint team:** This is where you send Wi-Fi scan data from Raspberry Pis.
+
+#### Setup Database Schema
+First-time setup - create the `wifi_scans` table:
+```bash
+curl -X POST http://localhost:3000/api/endpoint/setup-db \
+  -H "x-api-key: YOUR_API_KEY"
+
+# Response:
+# {
+#   "success": true,
+#   "message": "Database schema created successfully",
+#   "table": "wifi_scans"
+# }
+```
+
+#### Send Scan Data
+**POST /api/endpoint/scan-data**
+- Receives Wi-Fi scan data from endpoints
+- Requires API key authentication
+- Supports single scan or batch scans
+
+**Single Scan Example:**
+```bash
+curl -X POST http://localhost:3000/api/endpoint/scan-data \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "endpoint_id": "EP001",
+    "mac": "A1:B2:C3:D4:E5:F6",
+    "rssi": -45,
+    "timestamp": "2025-10-21T12:00:00Z"
+  }'
+
+# Response:
+# {
+#   "success": true,
+#   "message": "Successfully stored 1 scan(s)",
+#   "data": [{
+#     "id": 1,
+#     "endpoint_id": "EP001",
+#     "mac": "A1:B2:C3:D4:E5:F6",
+#     "rssi": -45,
+#     "timestamp": "2025-10-21T12:00:00.000Z",
+#     "created_at": "2025-10-21T..."
+#   }]
+# }
+```
+
+**Batch Scans Example:**
+```bash
+curl -X POST http://localhost:3000/api/endpoint/scan-data \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "endpoint_id": "EP001",
+      "mac": "A1:B2:C3:D4:E5:F6",
+      "rssi": -45,
+      "timestamp": "2025-10-21T12:00:00Z"
+    },
+    {
+      "endpoint_id": "EP001",
+      "mac": "11:22:33:44:55:66",
+      "rssi": -67,
+      "timestamp": "2025-10-21T12:00:01Z"
+    }
+  ]'
+```
+
+**Data Validation:**
+- `endpoint_id`: Required string (e.g., "EP001", "RaspberryPi-A")
+- `mac`: Required MAC address in format XX:XX:XX:XX:XX:XX
+- `rssi`: Required integer between -100 and 0 (signal strength in dBm)
+- `timestamp`: Required ISO 8601 timestamp or valid date string
+
+**Error Response Example:**
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "details": [
+    "Scan 0: invalid MAC address format (expected XX:XX:XX:XX:XX:XX)",
+    "Scan 1: rssi must be an integer between -100 and 0"
+  ]
+}
+```
+
+#### Retrieve Scan Data (Testing/Debugging)
+**GET /api/endpoint/scan-data**
+```bash
+# Get latest 100 scans
+curl -H "x-api-key: YOUR_API_KEY" \
+  http://localhost:3000/api/endpoint/scan-data
+
+# Get scans from specific endpoint
+curl -H "x-api-key: YOUR_API_KEY" \
+  "http://localhost:3000/api/endpoint/scan-data?endpoint_id=EP001"
+
+# Limit results
+curl -H "x-api-key: YOUR_API_KEY" \
+  "http://localhost:3000/api/endpoint/scan-data?limit=10"
+```
+
