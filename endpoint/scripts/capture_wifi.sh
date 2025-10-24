@@ -1,10 +1,4 @@
 #!/bin/bash
-# ================================================================
-# capture_wifi.sh
-# Description:
-#   Captures Wi-Fi packets on a specified interface using tcpdump,
-#   parses them through parser_scan.py, and outputs JSONL records.
-# ================================================================
 
 set -euo pipefail
 
