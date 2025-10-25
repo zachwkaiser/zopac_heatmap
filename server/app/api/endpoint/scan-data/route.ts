@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     // 4) Insert valid scans into database (keep your insert style, ensure close in finally)
     const sql = postgres({
       host: process.env.POSTGRES_HOST,
-      port: 5432,
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
       database: process.env.POSTGRES_DATABASE,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
