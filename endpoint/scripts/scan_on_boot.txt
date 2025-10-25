@@ -61,3 +61,7 @@ d. Recently created: wifi_status.py! This script will display the current inform
 e. MAKE SURE ALL FILES USE LF LINE SEQUENCE. This has caused more trouble on the Pi's than it should have. 
 
 Any further questions and or troubleshooting will have to be resolve with the internet/AI.
+
+
+How to edit .env on endpoint:
+    nano /home/pi/WiFi_Project/.env
