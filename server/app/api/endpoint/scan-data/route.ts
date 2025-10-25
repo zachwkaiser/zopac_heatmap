@@ -5,9 +5,13 @@ export const runtime = "nodejs"; // needed for postgres in the App Router
 
 // ---- Auth helper ----------------------------------------------------------
 function isAuthorized(req: Request): boolean {
-  const header = req.headers.get("authorization") || "";
-  const token = header.startsWith("ApiKey ") ? header.slice(7) : null;
-  return !!(token && process.env.API_KEY && token === process.env.API_KEY);
+  const auth = req.headers.get("authorization") || "";
+  const fromAuth = auth.startsWith("ApiKey ") ? auth.slice(7) : null;
+  const fromHeader = req.headers.get("x-api-key");
+  const token = fromAuth || fromHeader;
+
+  const serverKey = process.env.ENDPOINT_API_KEY || process.env.API_KEY;
+  return !!(token && serverKey && token === serverKey);
 }
 
 // ---- Validation helpers (your originals, with MAC normalization added) ----
@@ -170,7 +174,7 @@ export async function GET(request: Request) {
 
     const sql = postgres({
       host: process.env.POSTGRES_HOST,
-      port: 5432,
+      port: Number(process.env.POSTGRES_PORT ?? 5432),
       database: process.env.POSTGRES_DATABASE,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
