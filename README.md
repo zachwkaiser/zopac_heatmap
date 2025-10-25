@@ -122,3 +122,34 @@ If an error occurs, install tcpdump using:
 - ./capture_wifi.sh wlan1 ./captures
 3. The dongle will begin the capture Wi-Fi packets and save them to a log file within the /captures directory. 
 4. Use CTRL + C to terminate.
+
+
+## Enable Endpoint to Scan immediately on Boot
+You need to create a .service file located in the system directory. To create this:
+1. Open CLI
+2. navigate to root
+3. navigate to the system directory using:
+    cd etc/systemd/system
+4. create the .system file using:
+    sudo nano wifi-capture.service (NOTE: This name can be anything; its just the title of the service being created)
+5. Insert all of the code found within scan_on_boot.txt
+6. After saving and exiting, run the following commands:
+    sudo systemctl daemon-reload
+    sudo systemctl restart wifi-capture.service
+    systemctl status wifi-capture.service
+7. The .sh scripts within the project are now running on boot
+
+### Key Notes:
+1. This service file calls both the setup_monitor.sh and capture_wifi.sh files in this order. So, anything other files (.sh, .json, .py, etc) that are involved with these scripts will consequently execute
+2. All logs are written to /home/pi instead of the dedicated WiFi_Project directory. Im doing this in attempt to keep the Projected Directory clean of constant log files- I want it to be purely code
+3. HIGH IMPORTANCE: To terminate the scanning process initiated by the .service file, run the following command after booting the system:
+    sudo systemctl stop wifi-capture.service
+Confirm the service was terminated using:
+    sudo systemctl status wifi-capture.service
+Look for a line containing: wifi-capture.service: Deactivated successfully
+This will suspend the program during this session and it will resume on the next boot. 
+4. Recently created: wifi_status.py! This script will display the current information of the .service function.
+5. MAKE SURE ALL FILES USE LF LINE SEQUENCE. This has caused more trouble on the Pi's than it should have. 
+Any further questions and or troubleshooting will have to be resolve with the internet/AI.
+6. How to edit .env on endpoint:
+    nano /home/pi/WiFi_Project/.env
