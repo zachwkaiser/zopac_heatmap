@@ -151,7 +151,7 @@ class Shipper:
         headers = {
             "Content-Type": "application/json; charset=utf-8",
             "Accept": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
+            "x-api-key": self.api_key,
             "User-Agent": "WiFiEndpoint/1.0",
         }
 
