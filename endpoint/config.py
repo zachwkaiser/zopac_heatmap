@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # take environment variables from .env file
 
+
 @dataclass(frozen=True)
 class Config:
     """Endpoint configuration loaded from environment variables (.env).
@@ -20,6 +21,7 @@ class Config:
         batch_max (int): Max number of log records per batch. Defaults to 200.
         batch_interval (int): Max seconds to wait before sending a batch. Defaults to 5.
     """
+
     endpoint_id: str
     wlan_iface: str
     server_url: str

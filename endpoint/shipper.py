@@ -7,6 +7,7 @@ import logging
 from typing import Any, Dict, List
 from urllib import request, error
 
+
 class Shipper:
     """
     Batches parsed records and POSTs them to the server.
@@ -51,7 +52,9 @@ class Shipper:
             self._log.addHandler(logging.NullHandler())
 
         # Background sender thread
-        self._thread = threading.Thread(target=self._run, name="ShipperThread", daemon=True)
+        self._thread = threading.Thread(
+            target=self._run, name="ShipperThread", daemon=True
+        )
         self._thread.start()
 
     # ---------------- Public API ----------------
@@ -165,32 +168,52 @@ class Shipper:
         while True:
             attempt += 1
             try:
-                req = request.Request(self.server_url, data=body_bytes, headers=headers, method="POST")
+                req = request.Request(
+                    self.server_url, data=body_bytes, headers=headers, method="POST"
+                )
                 with request.urlopen(req, timeout=self.timeout_s) as resp:
                     status = getattr(resp, "status", 200)
                     if 200 <= status < 300:
                         # Success
                         if self._log.isEnabledFor(logging.DEBUG):
-                            self._log.debug("POST ok: sent=%d status=%s", len(records), status)
+                            self._log.debug(
+                                "POST ok: sent=%d status=%s", len(records), status
+                            )
                         return
                     else:
-                        raise error.HTTPError(self.server_url, status, f"HTTP {status}", hdrs=None, fp=None)
+                        raise error.HTTPError(
+                            self.server_url,
+                            status,
+                            f"HTTP {status}",
+                            hdrs=None,
+                            fp=None,
+                        )
 
             except (error.URLError, error.HTTPError, TimeoutError) as e:
                 retriable = True
                 status = getattr(e, "code", None)
                 # Treat 4xx (except 429) as non-retriable (bad request/auth)
-                if isinstance(e, error.HTTPError) and status is not None and 400 <= status < 500 and status != 429:
+                if (
+                    isinstance(e, error.HTTPError)
+                    and status is not None
+                    and 400 <= status < 500
+                    and status != 429
+                ):
                     retriable = False
 
                 self._log.warning(
                     "POST failed (attempt %d/%d, retriable=%s): %s",
-                    attempt, self.max_retries, retriable, e
+                    attempt,
+                    self.max_retries,
+                    retriable,
+                    e,
                 )
 
                 if not retriable or attempt >= self.max_retries:
                     # Give up—drop this batch to avoid blocking pipeline forever
-                    self._log.error("Dropping batch of %d after %d attempts.", len(records), attempt)
+                    self._log.error(
+                        "Dropping batch of %d after %d attempts.", len(records), attempt
+                    )
                     return
 
                 time.sleep(backoff)

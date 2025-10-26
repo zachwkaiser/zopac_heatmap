@@ -36,12 +36,16 @@ def main():
         description="Stream tcpdump output → parse → batch → ship to server."
     )
     parser.add_argument(
-        "--from", dest="source", default=None,
-        help="Optional path to a file containing tcpdump output (otherwise read from stdin)."
+        "--from",
+        dest="source",
+        default=None,
+        help="Optional path to a file containing tcpdump output (otherwise read from stdin).",
     )
     parser.add_argument(
-        "--tee-jsonl", dest="tee_path", default=None,
-        help="Optional path to also write parsed JSONL records locally for debugging."
+        "--tee-jsonl",
+        dest="tee_path",
+        default=None,
+        help="Optional path to also write parsed JSONL records locally for debugging.",
     )
     args = parser.parse_args()
 
@@ -79,7 +83,9 @@ def main():
 
     log.info(
         "Starting stream (endpoint_id=%s, iface=%s, server=%s)",
-        cfg.endpoint_id, cfg.wlan_iface, cfg.server_url
+        cfg.endpoint_id,
+        cfg.wlan_iface,
+        cfg.server_url,
     )
 
     last_log = time.time()
@@ -114,8 +120,12 @@ def main():
             if now - last_log >= 5:
                 log.info(
                     "seen=%d parsed=%d enqueued=%d (batch_max=%d, flush=%ds, hb=%ds)",
-                    stats["seen"], stats["parsed"], stats["sent_enqueued"],
-                    cfg.batch_max, cfg.batch_interval, cfg.heartbeat_sec
+                    stats["seen"],
+                    stats["parsed"],
+                    stats["sent_enqueued"],
+                    cfg.batch_max,
+                    cfg.batch_interval,
+                    cfg.heartbeat_sec,
                 )
                 last_log = now
 
@@ -134,6 +144,7 @@ def main():
         if tee_file:
             tee_file.close()
         log.info("Stream stopped cleanly.")
+
 
 if __name__ == "__main__":
     main()
