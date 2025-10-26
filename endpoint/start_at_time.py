@@ -96,7 +96,7 @@ def main():
     _ = launch_capture(args.capture_script, args.iface, args.logdir, channel=args.channel)
 
     if args.duration_sec and args.duration_sec > 0:
-        print(f"Running for {args.duration_sec} seconds…", flush=True)
+        print(f"Running for {args.duration_sec} seconds...", flush=True)
         time.sleep(args.duration_sec)
         subprocess.run(["sudo", "pkill", "tcpdump"])
         print("Auto-stopped capture.", flush=True)
