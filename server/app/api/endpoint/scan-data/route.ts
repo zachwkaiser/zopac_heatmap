@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import postgres from 'postgres';
 
+interface WifiScan {
+  endpoint_id: string;
+  mac: string;
+  rssi: number;
+  timestamp: string;
+}
+
 // Validate MAC address format (XX:XX:XX:XX:XX:XX)
 function isValidMacAddress(mac: string): boolean {
   const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
@@ -30,7 +37,7 @@ export async function POST(request: Request) {
     
     // Validate all scans
     const errors: string[] = [];
-    const validScans: any[] = [];
+    const validScans: WifiScan[] = [];
     
     scans.forEach((scan, index) => {
       const { endpoint_id, mac, rssi, timestamp } = scan;

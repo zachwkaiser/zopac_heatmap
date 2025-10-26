@@ -58,8 +58,8 @@ export function trilaterate(scans: ScanWithDistance[]): Position | null {
   // Use least squares method for better accuracy with multiple points
   // Minimize sum of squared errors: (x - x_i)^2 + (y - y_i)^2 = d_i^2
   
-  let A: number[][] = [];
-  let b: number[] = [];
+  const A: number[][] = [];
+  const b: number[] = [];
 
   // Use first point as reference
   const ref = scans[0];
