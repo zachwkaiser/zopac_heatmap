@@ -31,12 +31,25 @@ export async function POST() {
     await sql`CREATE INDEX IF NOT EXISTS idx_mac ON wifi_scans(mac);`;
     await sql`CREATE INDEX IF NOT EXISTS idx_timestamp ON wifi_scans(timestamp);`;
 
+    // Create endpoint_positions table for localization
+    await sql`
+      CREATE TABLE IF NOT EXISTS endpoint_positions (
+        endpoint_id VARCHAR(50) PRIMARY KEY,
+        x FLOAT NOT NULL,
+        y FLOAT NOT NULL,
+        floor INTEGER DEFAULT 1,
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
     await sql.end();
 
     return NextResponse.json({
       success: true,
       message: 'Database schema created successfully',
-      table: 'wifi_scans'
+      tables: ['wifi_scans', 'endpoint_positions']
     });
   } catch (error) {
     console.error('Database setup error:', error);
