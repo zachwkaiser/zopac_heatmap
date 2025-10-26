@@ -13,23 +13,35 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirm, setSignupConfirm] = useState('');
-  const [testCredentials, setTestCredentials] = useState({
-    username: 'admin@gmail.com',
-    password: 'password',
-  });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (email === testCredentials.username && password === testCredentials.password) {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Invalid email or password. Please try again.');
+        return;
+      }
+
       setIsAuthenticated(true);
       alert('Login successful!');
-    } else {
-      alert('Invalid email or password. Please try again.');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Failed to log in. Please check your connection and try again.');
     }
-
-    setEmail('');
-    setPassword('');
   };
 
   const handleOpenSignup = () => {
@@ -55,7 +67,7 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isSignupOpen]);
 
-  const handleSignupSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!signupEmail || !signupPassword) {
       alert('Please fill in all required fields.');
@@ -65,10 +77,32 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
       alert('Passwords do not match.');
       return;
     }
-    // Update demo credentials and close modal
-    setTestCredentials({ username: signupEmail, password: signupPassword });
-    alert('Account created successfully! You can now log in with your new credentials.');
-    handleCloseSignup();
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: signupEmail,
+          password: signupPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to create account.');
+        return;
+      }
+
+      alert('Account created successfully! You can now log in with your new credentials.');
+      handleCloseSignup();
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('Failed to create account. Please check your connection and try again.');
+    }
   };
 
   if (isAuthenticated) {
