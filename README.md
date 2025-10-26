@@ -99,7 +99,7 @@ The linter being used for the endpoint is Ruff and Black.
 The endpoint repo contains all components needed to deploy a Raspberry Pi endpoint to capture Wi-Fi data.
 
 ###  .env Establishment 
-1. Within the endpoint, copy the .env.example template to /etc/wifi-endpoint/.env and enter the fields with device specific information. 
+1. Within the endpoint, copy the .env.example template to /home/pi/WiFi_Project/.env and enter the fields with device specific information. 
 2. Secure the changes within the CLI using:
 - sudo chown root:root /etc/wifi-endpoint/.env
 - sudo chmod 600 /etc/wifi-endpoint/.env
@@ -153,3 +153,12 @@ This will suspend the program during this session and it will resume on the next
 Any further questions and or troubleshooting will have to be resolve with the internet/AI.
 6. How to edit .env on endpoint:
     nano /home/pi/WiFi_Project/.env
+
+
+## Syncing Pi Clocks
+All Pis are going to be set to UTC time to ensure time stamps line up. Additionally, they are also going to sync using NTP.
+
+1. sudo timedatectl set-ntp true
+- This will ask for the password
+2. timedatectl status
+
