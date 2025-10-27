@@ -1,6 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
 import './style.css';
+
+// Import heatmap.js type definitions
+declare global {
+  interface Window {
+    h337: any;
+  }
+}
 
 function HeatMapPage() {
   const [serverIP, setServerIP] = useState('');
@@ -10,7 +17,93 @@ function HeatMapPage() {
   const [showMapUpload, setShowMapUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileType, setFileType] = useState<string | null>(null);
+  const heatmapContainerRef = useRef<HTMLDivElement>(null);
+  const heatmapInstanceRef = useRef<any>(null);
 
+  // Function to initialize and display heatmap with hardcoded example data
+  const initializeHeatmap = () => {
+    // Don't initialize if heatmap already exists
+    if (heatmapInstanceRef.current) return;
+
+    // Load heatmap.js library dynamically
+    if (!window.h337 && heatmapContainerRef.current) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/gh/pa7/heatmap.js@master/build/heatmap.min.js';
+      script.onload = () => {
+        createHeatmapInstance();
+      };
+      document.body.appendChild(script);
+    } else if (window.h337 && heatmapContainerRef.current) {
+      createHeatmapInstance();
+    }
+  };
+
+  // Function to create heatmap instance with hardcoded example data
+  const createHeatmapInstance = () => {
+    if (!window.h337 || !heatmapContainerRef.current) return;
+
+    // Create heatmap configuration
+    const config = {
+      container: heatmapContainerRef.current,
+      radius: 20,
+      maxOpacity: 0.8,
+      minOpacity: 0,
+      blur: 0.75,
+      gradient: {
+        '.4': 'blue',
+        '.6': 'cyan',
+        '.7': 'lime',
+        '.8': 'yellow',
+        '1.0': 'red'
+      }
+    };
+
+    // Create heatmap instance
+    const heatmapInstance = window.h337.create(config);
+    heatmapInstanceRef.current = heatmapInstance;
+
+    // Hardcoded example data points (will be replaced with API data later)
+    const exampleData = {
+      max: 100,
+      min: 0,
+      data: [
+        { x: 100, y: 100, value: 90 },
+        { x: 200, y: 150, value: 75 },
+        { x: 300, y: 200, value: 60 },
+        { x: 400, y: 100, value: 85 },
+        { x: 500, y: 250, value: 70 },
+        { x: 600, y: 300, value: 95 },
+        { x: 300, y: 350, value: 50 },
+        { x: 150, y: 200, value: 80 },
+        { x: 250, y: 300, value: 65 },
+        { x: 450, y: 350, value: 75 },
+        { x: 550, y: 180, value: 90 },
+        { x: 180, y: 280, value: 55 },
+        { x: 650, y: 400, value: 70 },
+        { x: 700, y: 180, value: 85 },
+        { x: 380, y: 380, value: 60 }
+      ]
+    };
+
+    // Set the data to display the heatmap
+    heatmapInstance.setData(exampleData);
+  };
+
+  // Initialize heatmap only after image is uploaded
+  useEffect(() => {
+    if (uploadedImage) {
+      initializeHeatmap();
+    }
+
+    // Cleanup function
+    return () => {
+      if (heatmapInstanceRef.current) {
+        // Cleanup if needed
+        heatmapInstanceRef.current = null;
+      }
+    };
+  }, [uploadedImage]);
 
   // API function to send data to Postman mock endpoint
   const sendToAPI = async (ip: string) => {
@@ -72,25 +165,42 @@ function HeatMapPage() {
     const file = target.files?.[0];
     
     if (file) {
-      console.log('Selected file:', file.name);
+      console.log('Selected file:', file.name, 'Type:', file.type);
       setSelectedFile(file);
+      // Clear any previous error messages
+      setMessage(null);
     }
   };
 
   // Handle upload button click - process the selected file
   const handleUploadClick = () => {
     if (selectedFile) {
+      // Reset previous uploads
+      setUploadedImage(null);
+      setFileType(null);
+      
       // Check if it's an image file
       if (selectedFile.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const result = event.target?.result as string;
           setUploadedImage(result);
+          setFileType('image');
+        };
+        reader.readAsDataURL(selectedFile);
+      } else if (selectedFile.type === 'application/pdf') {
+        // Handle PDF file
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          setUploadedImage(result);
+          setFileType('pdf');
         };
         reader.readAsDataURL(selectedFile);
       } else {
-        console.log('Non-image file selected:', selectedFile.name);
-        // Handle PDF or other file types here if needed
+        console.log('Unsupported file type:', selectedFile.type);
+        setMessage({ type: 'error', text: 'Unsupported file type. Please upload JPG or PDF files.' });
+        setTimeout(() => setMessage(null), 3000);
       }
       
       // Close modal after upload
@@ -116,11 +226,11 @@ function HeatMapPage() {
                     <Form.Label>Select Map File</Form.Label>
                     <Form.Control
                       type="file"
-                      accept=".jpg,.pdf"
+                      accept="image/jpeg,image/png,image/jpg,application/pdf"
                       onChange={handleFileUpload}
                     />
                     <Form.Text className="text-muted">
-                      Supported formats: JPG, PDF
+                      Supported formats: JPG, PNG, PDF
                     </Form.Text>
                   </Form.Group>
                   <div className="d-flex justify-content-center gap-4">
@@ -193,12 +303,63 @@ function HeatMapPage() {
             </Form>
           </Row>
         </Col>
-        <Col className='heatmap-container' lg={9} style={{
-          backgroundImage: uploadedImage ? `url(${uploadedImage})` : 'none',
-          backgroundSize: 'contain',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}>
+        <Col className='heatmap-container' lg={9}>
+          {!uploadedImage && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              color: '#666',
+              fontSize: '18px',
+              flexDirection: 'column',
+              gap: '10px'
+            }}>
+              <p>Upload a map to display the heatmap</p>
+              <Button 
+                className='info-button' 
+                onClick={() => setShowMapUpload(true)}
+                style={{ maxWidth: '300px' }}
+              >
+                Upload Map
+              </Button>
+            </div>
+          )}
+          {uploadedImage && fileType === 'image' && (
+            <img 
+              src={uploadedImage} 
+              alt="Map" 
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'fill',
+                opacity: 0.7,
+                zIndex: 1,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+          {uploadedImage && fileType === 'pdf' && (
+            <iframe 
+              src={uploadedImage} 
+              title="Map PDF"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                border: 'none',
+                opacity: 0.7,
+                zIndex: 1,
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}></div>
         </Col>
       </Row>
     </Container>
