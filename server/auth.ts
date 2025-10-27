@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { authConfig } from './auth.config';
 import { z } from 'zod';
 import postgres from 'postgres';
@@ -24,9 +25,14 @@ async function getUser(email: string): Promise<User | undefined> {
   }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { auth, signIn, signOut, handlers } = NextAuth({
   ...authConfig,
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+
     Credentials({
       async authorize(credentials) {
         const parsedCredentials = z
@@ -47,4 +53,29 @@ export const { auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+
+  callbacks: {
+    async session({ session, token, user }) {
+      if (token) {
+        session.user = {
+          id: token.sub ?? '',
+          emailVerified: null, 
+          name: token.name,
+          email: token.email ?? '',
+          image: token.picture ?? '',
+        };
+      }
+      return session;
+    },
+
+    async jwt({ token, account, profile }) {
+      
+      if (account && profile) {
+        token.name = profile.name;
+        token.email = profile.email;
+        token.picture = profile.picture;
+      }
+      return token;
+    },
+  },
 });

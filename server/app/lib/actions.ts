@@ -3,6 +3,7 @@
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData,
@@ -15,7 +16,7 @@ export async function authenticate(
         case 'CredentialsSignin':
           return 'Invalid credentials.';
         default:
-          return 'Something went wrong.';
+          return 'Something went wrong with authentication.';
       }
     }
     throw error;
