@@ -2,10 +2,45 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
 import './style.css';
 
-// Import heatmap.js type definitions
+// Heatmap.js type definitions
+interface HeatmapDataPoint {
+  x: number;
+  y: number;
+  value: number;
+}
+
+interface HeatmapData {
+  max: number;
+  min: number;
+  data: HeatmapDataPoint[];
+}
+
+interface HeatmapConfig {
+  container: HTMLElement;
+  radius?: number;
+  maxOpacity?: number;
+  minOpacity?: number;
+  blur?: number;
+  gradient?: Record<string, string>;
+}
+
+interface HeatmapInstance {
+  setData(data: HeatmapData): HeatmapInstance;
+  addData(dataPoint: HeatmapDataPoint | HeatmapDataPoint[]): HeatmapInstance;
+  configure(config: Partial<HeatmapConfig>): HeatmapInstance;
+  getValueAt(point: { x: number; y: number }): number;
+  getData(): HeatmapData;
+  getDataURL(): string;
+  repaint(): HeatmapInstance;
+}
+
+interface HeatmapFactory {
+  create(config: HeatmapConfig): HeatmapInstance;
+}
+
 declare global {
   interface Window {
-    h337: any;
+    h337: HeatmapFactory;
   }
 }
 
@@ -19,7 +54,7 @@ function HeatMapPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState<string | null>(null);
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
-  const heatmapInstanceRef = useRef<any>(null);
+  const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
   // Function to initialize and display heatmap with hardcoded example data
   const initializeHeatmap = () => {
@@ -44,7 +79,7 @@ function HeatMapPage() {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
     // Create heatmap configuration
-    const config = {
+    const config: HeatmapConfig = {
       container: heatmapContainerRef.current,
       radius: 20,
       maxOpacity: 0.8,
@@ -103,6 +138,7 @@ function HeatMapPage() {
         heatmapInstanceRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
   // API function to send data to Postman mock endpoint
