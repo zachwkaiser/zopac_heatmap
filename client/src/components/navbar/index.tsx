@@ -16,7 +16,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, onNavClick, onLogout, activePag
         {routes.map((route) => (
           <li key={route.name} className="navbar-item">
             <button
-              className={`navbar-link ${activePage === route.name ? 'active' : ''}`}
+              className={`navbar-link ${activePage === route.name ? 'active' : ''} ${route.name === 'Heat map' ? 'heatmap-btn' : ''}`}
               onClick={() => onNavClick(route.name)}
             >
               {route.name}

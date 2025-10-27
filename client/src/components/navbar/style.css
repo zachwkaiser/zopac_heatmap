@@ -2,14 +2,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #333;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 50, 100, 0.9) 100%);
+  color: #ffffff;
   padding: 1rem 0;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 255, 255, 0.2);
 }
 
 .nav-container {
@@ -29,37 +35,119 @@
 }
 
 .navbar-item {
-  margin: 0 10px;
+  margin: 0 15px;
 }
 
 .logout-item {
   position: absolute;
   right: 1rem;
-  background: linear-gradient(135deg, var(--primary-0), var(--primary-1));
-  border-radius: 4px;
 }
 
 .navbar-link {
-  background: none;
-  border: none;
-  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: #00ffff;
   text-decoration: none;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  padding: 8px 12px;
-  transition: background-color 0.3s;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .navbar-link:focus {
-  outline: none; /* Remove the white outline */
-}
-
-.navbar-link.active {
-  background-color: #555;
-  border-radius: 4px;
+  outline: none;
 }
 
 .navbar-link:hover {
-  background-color: #777;
-  border-radius: 4px;
+  background: rgba(0, 255, 255, 0.15);
+  border-color: rgba(0, 255, 255, 0.5);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 12px rgba(0, 255, 255, 0.3),
+    0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+.navbar-link.active {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.3) 0%, rgba(0, 150, 255, 0.3) 100%);
+  border-color: rgba(0, 255, 255, 0.6);
+  color: #ffffff;
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+.navbar-link.active:hover {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.4) 0%, rgba(0, 150, 255, 0.4) 100%);
+  box-shadow: 
+    0 0 25px rgba(0, 255, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Heatmap button special styling - green, red, yellow gradient */
+.navbar-link.heatmap-btn {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.3) 0%, rgba(244, 67, 54, 0.3) 50%, rgba(255, 235, 59, 0.3) 100%);
+  border-color: rgba(76, 175, 80, 0.6);
+  color: #ffffff;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+}
+
+.navbar-link.heatmap-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.navbar-link.heatmap-btn:hover::before {
+  left: 100%;
+}
+
+.navbar-link.heatmap-btn:hover {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.4) 0%, rgba(244, 67, 54, 0.4) 50%, rgba(255, 235, 59, 0.4) 100%);
+  border-color: rgba(76, 175, 80, 0.8);
+  box-shadow: 
+    0 4px 12px rgba(76, 175, 80, 0.3),
+    0 0 25px rgba(244, 67, 54, 0.2),
+    0 0 15px rgba(255, 235, 59, 0.2);
+  transform: translateY(-2px);
+}
+
+.navbar-link.heatmap-btn.active {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.5) 0%, rgba(244, 67, 54, 0.5) 50%, rgba(255, 235, 59, 0.5) 100%);
+  border-color: rgba(76, 175, 80, 1);
+  box-shadow: 
+    0 0 30px rgba(76, 175, 80, 0.4),
+    0 0 20px rgba(244, 67, 54, 0.3),
+    0 0 10px rgba(255, 235, 59, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Logout button special styling */
+.logout-item .navbar-link {
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.2) 0%, rgba(139, 0, 0, 0.2) 100%);
+  border-color: rgba(220, 20, 60, 0.4);
+  color: #ff6b9d;
+}
+
+.logout-item .navbar-link:hover {
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.3) 0%, rgba(139, 0, 0, 0.3) 100%);
+  border-color: rgba(220, 20, 60, 0.8);
+  color: #ffffff;
+  box-shadow: 
+    0 4px 12px rgba(220, 20, 60, 0.3),
+    0 0 20px rgba(220, 20, 60, 0.2);
+  transform: translateY(-2px);
 }
