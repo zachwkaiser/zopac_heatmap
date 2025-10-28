@@ -1,28 +1,30 @@
 from dataclasses import dataclass
 import os
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+load_dotenv()  # take environment variables from .env file
 
 
 @dataclass(frozen=True)
 class Config:
-    """Class representing the endpoint configuration. Each field relates to a setting from the .env file. AI was used to suggest the update channel
-       and log level
+    """Endpoint configuration loaded from environment variables (.env).
 
     Attributes:
-    endpoint_id (str) Unique identity for this endpoint
-    WLAN_iface (str) Interface used to capture WI-Fi data
-    server_URL (str) The URL of the server
-    api_key (str) Authentication token used to send data to the server
-    log_level (str) (DEBUG, INFO, ERROR) Defaults to INFO. Selects which type of data to capture in the config logs
-    update_channel (str) Channel used to send updates from the server to the endpoint. Defaults to stable
-    heartbeat_sec (int) Intervals between heartbeat messages. Defaults to 30 sec
-    batch_max (int) Maximum number of log records to send during the boot process
-    batch_interval (int) Maximum time to wait before sending a batch. Defaults to 5 sec
+        endpoint_id (str): Unique identity for this endpoint.
+        wlan_iface (str): Interface used to capture Wi-Fi data (e.g., wlan1).
+        server_url (str): The ingest URL of the server. HTTPS required unless ALLOW_INSECURE_HTTP=true.
+        api_key (str): Authentication token used to send data to the server.
+        log_level (str): One of {DEBUG, INFO, WARNING, ERROR, CRITICAL}. Defaults to INFO.
+        update_channel (str): Update channel for server→endpoint updates. Defaults to 'stable'.
+        heartbeat_sec (int): Interval between heartbeat messages (seconds). Defaults to 30.
+        batch_max (int): Max number of log records per batch. Defaults to 200.
+        batch_interval (int): Max seconds to wait before sending a batch. Defaults to 5.
     """
 
     endpoint_id: str
-    WLAN_iface: str
-    server_URL: str
+    wlan_iface: str
+    server_url: str
     api_key: str
     log_level: str = "INFO"
     update_channel: str = "stable"
@@ -31,21 +33,15 @@ class Config:
     batch_interval: int = 5
 
 
+def _require(env_name: str) -> str:
+    val = os.getenv(env_name, "").strip()
+    if not val:
+        raise ValueError(f"Missing required setting: {env_name}")
+    return val
+
+
 def _as_int(name: str, value, default: int) -> int:
-    """Helper function that will convert values within the .env file from a string to an integer. AI pointed out that this was needed to properly
-        read the .env file.
-
-    Args:
-        name (str): The name of the key within the config file. Primarily for error messages
-        value (str or None): The value from the .env file
-        default (int): The default int value if one is not provided in the .env file
-
-    Raises:
-        ValueError: If the value is not None and cannot be converted to an integer
-
-    Returns:
-        int: integer representation of values within the .env file
-    """
+    """Convert a string env value to int, or use default."""
     if value is None:
         return default
     try:
@@ -54,60 +50,53 @@ def _as_int(name: str, value, default: int) -> int:
         raise ValueError(f"{name} must be an integer, got {value!r}")
 
 
-def _validate_https(url: str):
-    """Helper function that will validate the URL is formatted correctly and uses HTTPS. ChatGPT helped create this since I am unfamiliar with urlparse
+def _is_truthy(s: str | None) -> bool:
+    """Interpret common true-ish strings as True."""
+    return str(s or "").strip().lower() in {"1", "true", "yes", "on"}
 
-    Args:
-        url (str): The URL string from the config file (SERVER_URL)
 
-    Raises:
-        ValueError: If the URL is missing, does not include a host, or does not follow HTTPS
-    """
+def _validate_url(url: str, allow_insecure_http: bool):
+    """Validate that the URL has a scheme+host and (unless allowed) uses HTTPS."""
     p = urlparse(url)
-    if p.scheme != "https" or not p.netloc:
-        raise ValueError("SERVER_URL must be a valid https URL")
+    if not p.scheme or not p.netloc:
+        raise ValueError("SERVER_URL must be a valid URL with scheme and host")
+    if not allow_insecure_http and p.scheme != "https":
+        raise ValueError("SERVER_URL must use https unless ALLOW_INSECURE_HTTP=true")
 
 
 def load_config() -> Config:
-    """Function that initializes the configuration of the endpoint.
+    """Initialize and validate configuration from environment variables."""
+    # Required values
+    endpoint_id = _require("ENDPOINT_ID")
+    wlan_iface = _require("WLAN_IFACE")
+    server_url = _require("SERVER_URL")
+    api_key = _require("API_KEY")
 
-    Raises:
-        ValueError: If an essential variable is missing from the .env file
+    # Toggle: allow HTTP (insecure) for local/dev if ALLOW_INSECURE_HTTP=true
+    allow_insecure_http = _is_truthy(os.getenv("ALLOW_INSECURE_HTTP"))
+    _validate_url(server_url, allow_insecure_http)
 
-    Returns:
-        Config: Configuration object
-    """
-    c = Config(
-        endpoint_id=os.getenv("ENDPOINT_ID"),
-        WLAN_iface=os.getenv("WLAN_IFACE"),
-        server_URL=os.getenv("SERVER_URL"),
-        api_key=os.getenv("API_KEY"),
-        log_level=os.getenv("LOG_LEVEL", "INFO"),
-        update_channel=os.getenv("UPDATE_CHANNEL", "stable"),
-        heartbeat_sec=_as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30),
-        batch_max=_as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200),
-        batch_interval=_as_int(
-            "BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5
-        ),
+    # Optional values
+    log_level = os.getenv("LOG_LEVEL", "INFO").strip().upper()
+    update_channel = os.getenv("UPDATE_CHANNEL", "stable").strip()
+    heartbeat_sec = _as_int("HEARTBEAT_SEC", os.getenv("HEARTBEAT_SEC"), 30)
+    batch_max = _as_int("BATCH_MAX", os.getenv("BATCH_MAX"), 200)
+    batch_interval = _as_int("BATCH_INTERVAL_SEC", os.getenv("BATCH_INTERVAL_SEC"), 5)
+
+    # Validate log level
+    valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
+    if log_level not in valid_levels:
+        raise ValueError(f"LOG_LEVEL must be one of {valid_levels}, got {log_level!r}")
+
+    # Return a validated, immutable Config instance
+    return Config(
+        endpoint_id=endpoint_id,
+        wlan_iface=wlan_iface,
+        server_url=server_url,
+        api_key=api_key,
+        log_level=log_level,
+        update_channel=update_channel,
+        heartbeat_sec=heartbeat_sec,
+        batch_max=batch_max,
+        batch_interval=batch_interval,
     )
-
-    # Requirement check
-    required = {
-        "ENDPOINT_ID": c.endpoint_id,
-        "WLAN_IFACE": c.WLAN_iface,
-        "SERVER_URL": c.server_URL,
-        "API_KEY": c.api_key,
-    }
-
-    missing = []
-
-    # Loop will identify any missing essential fields from the .env file
-    for key, value in required.items():
-        if not value:
-            missing.append(key)
-
-    if missing:
-        raise ValueError(f"Missing required settings: {', '.join(missing)}")
-
-    _validate_https(c.server_URL)
-    return c

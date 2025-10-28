@@ -31,6 +31,7 @@ export default function middleware(request: NextRequest) {
   }
   
   // For all other routes, use NextAuth middleware
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return authMiddleware(request as any);
 }
  
