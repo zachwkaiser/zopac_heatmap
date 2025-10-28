@@ -2,7 +2,7 @@ name: Server CI - Lint and Format Check
 
 on:
   push:
-    branches: [ main, feature/** ]
+    branches: [ main, feature/**, connect_ep_to_server ]
     paths:
       - 'server/**'
   pull_request:
