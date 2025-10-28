@@ -3,8 +3,6 @@ name: Server Lint and Format Check
 on:
   push:
     branches: [ main, 'feature/**', connect_ep_to_server ]
-    paths:
-      - 'server/**'
   pull_request:
     branches: [ main ]
     paths:
