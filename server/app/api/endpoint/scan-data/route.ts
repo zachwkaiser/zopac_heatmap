@@ -3,6 +3,13 @@ import postgres from 'postgres';
 
 export const runtime = "nodejs"; // needed for postgres in the App Router
 
+interface WifiScan {
+  endpoint_id: string;
+  mac: string;
+  rssi: number;
+  timestamp: string;
+}
+
 // ---- Auth helper ----------------------------------------------------------
 function isAuthorized(req: Request): boolean {
   const auth = req.headers.get("authorization") || "";
@@ -51,19 +58,20 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     // 2) Support {records:[...]}, [...] or single {...}
-    const scans: any[] = Array.isArray(body?.records)
+    const scans: WifiScan[] = Array.isArray(body?.records)
       ? body.records
       : Array.isArray(body)
       ? body
       : [body];
 
-    // 3) Validate per-scan (don’t let one bad scan block others)
+    // 3) Validate per-scan (don't let one bad scan block others)
     const errorDetails: Array<{ index: number; errors: string[] }> = [];
-    const validScans: Array<{ endpoint_id: string; mac: string; rssi: number; timestamp: string }> = [];
+    const validScans: WifiScan[] = [];
 
     scans.forEach((scan, index) => {
       const errs: string[] = [];
-      let { endpoint_id, mac, rssi, timestamp } = scan ?? {};
+      const { endpoint_id, rssi, timestamp } = scan ?? {};
+      let { mac } = scan ?? {};
 
       if (!endpoint_id || typeof endpoint_id !== 'string') {
         errs.push(`Scan ${index}: endpoint_id is required and must be a string`);
@@ -135,7 +143,7 @@ export async function POST(request: Request) {
         },
         { status: errorDetails.length ? 207 /* multi-status-ish */ : 201 }
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Preserve your table-not-found hint
       if (error instanceof Error && error.message.includes('relation "wifi_scans" does not exist')) {
         return NextResponse.json(
