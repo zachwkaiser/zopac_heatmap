@@ -12,10 +12,6 @@ jobs:
   lint-and-format:
     runs-on: ubuntu-latest
     
-    defaults:
-      run:
-        working-directory: ./server
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,6 +30,8 @@ jobs:
       
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+        working-directory: ./server
       
       - name: Run ESLint
         run: pnpm run lint
+        working-directory: ./server

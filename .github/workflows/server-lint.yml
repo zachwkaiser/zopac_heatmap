@@ -12,10 +12,6 @@ jobs:
   lint:
     name: ESLint Check
     runs-on: ubuntu-latest
-    
-    defaults:
-      run:
-        working-directory: ./server
 
     steps:
       - name: Checkout code
@@ -35,6 +31,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+        working-directory: ./server
 
       - name: Run ESLint
         run: pnpm run lint
+        working-directory: ./server
