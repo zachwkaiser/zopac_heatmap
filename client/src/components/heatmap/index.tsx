@@ -250,8 +250,6 @@ function HeatMapPage() {
         <Col className='information-container' lg={3}>
           <div className='top-content'>
             <div className='button-container'>
-              <Button className='info-button'>Settings</Button>
-              
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
               <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered>
                 <Modal.Header>
