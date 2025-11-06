@@ -24,9 +24,12 @@ const getData = async (url: string): Promise<DataResponse> => {
 
   try {
     const response = await axios.get(url);
+    // API returns { success: true, count: number, data: WifiScan[] }
+    // Extract the data array from the response
+    const apiResponse = response.data as { success: boolean; count?: number; data: WifiScan[] };
     return {
-      success: true,
-      data: response.data,
+      success: apiResponse.success,
+      data: apiResponse.data || [],
     };
   } catch (error) {
     console.error('Error getting data:', error);
@@ -54,11 +57,7 @@ export async function getScanData(): Promise<WifiScan[]> {
     const response = await getData('http://localhost:3000/api/client/scan-data');
 
     if (response.success) {
-        const result = response.data as WifiScan[];
-        return result;
-        // response.data is the data from the response variable, but since
-        // the getData function returns a DataResponse interface, we need to
-        // use the data of the DataResponse interface to get the data
+        return response.data;
     }
     return [];
 }

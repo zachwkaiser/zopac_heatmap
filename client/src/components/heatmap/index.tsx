@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import './style.css';
 import { getScanData } from './getData';
 
@@ -46,10 +46,6 @@ declare global {
 }
 
 function HeatMapPage() {
-  const [serverIP, setServerIP] = useState('');
-  const [previousEntries, setPreviousEntries] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [showMapUpload, setShowMapUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -59,8 +55,8 @@ function HeatMapPage() {
 
 
 
-  // Function to initialize and display heatmap with hardcoded example data
-  const initializeHeatmap = () => {
+  // Function to initialize and display heatmap with API data
+  const initializeHeatmap = async () => {
     // Don't initialize if heatmap already exists
     if (heatmapInstanceRef.current) return;
 
@@ -77,8 +73,8 @@ function HeatMapPage() {
     }
   };
 
-  // Function to create heatmap instance with hardcoded example data
-  const createHeatmapInstance = () => {
+  // Function to create heatmap instance with API data
+  const createHeatmapInstance = async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
     // Create heatmap configuration
@@ -101,32 +97,75 @@ function HeatMapPage() {
     const heatmapInstance = window.h337.create(config);
     heatmapInstanceRef.current = heatmapInstance;
 
-    // Hardcoded example data points (will be replaced with API data later)
-    const exampleData = {
+    // Fetch scan data from API
+    const wifiScans = await getScanData();
+    
+    // Transform WiFi scan data into heatmap data points
+    // Note: RSSI values are typically negative (-100 to 0), we'll normalize them
+    const heatmapPoints: HeatmapDataPoint[] = [];
+    
+    if (wifiScans.length > 0) {
+      // Get container dimensions for positioning
+      const container = heatmapContainerRef.current;
+      const containerWidth = container.offsetWidth || 800;
+      const containerHeight = container.offsetHeight || 600;
       
-      max: 100,
-      min: 0,
-      data: [
-        { x: 100, y: 100, value: 90 },
-        { x: 200, y: 150, value: 75 },
-        { x: 300, y: 200, value: 60 },
-        { x: 400, y: 100, value: 85 },
-        { x: 500, y: 250, value: 70 },
-        { x: 600, y: 300, value: 95 },
-        { x: 300, y: 350, value: 50 },
-        { x: 150, y: 200, value: 80 },
-        { x: 250, y: 300, value: 65 },
-        { x: 450, y: 350, value: 75 },
-        { x: 550, y: 180, value: 90 },
-        { x: 180, y: 280, value: 55 },
-        { x: 650, y: 400, value: 70 },
-        { x: 700, y: 180, value: 85 },
-        { x: 380, y: 380, value: 60 }
-      ]
-    };
-
-    // Set the data to display the heatmap
-    heatmapInstance.setData(exampleData);
+      // Group scans by endpoint_id to position them
+      const endpointGroups = new Map<string, typeof wifiScans>();
+      wifiScans.forEach(scan => {
+        if (!endpointGroups.has(scan.endpoint_id)) {
+          endpointGroups.set(scan.endpoint_id, []);
+        }
+        endpointGroups.get(scan.endpoint_id)!.push(scan);
+      });
+      
+      // Create heatmap points from scan data
+      let xOffset = 0;
+      const endpointCount = endpointGroups.size;
+      const xSpacing = containerWidth / Math.max(endpointCount, 1);
+      
+      endpointGroups.forEach((scans, endpointId) => {
+        scans.forEach((scan, index) => {
+          // Normalize RSSI to a positive value (0-100 scale)
+          // RSSI ranges from -100 (weak) to 0 (strong), convert to 0-100
+          const normalizedValue = Math.max(0, Math.min(100, scan.rssi + 100));
+          
+          // Calculate x position based on endpoint
+          const x = xOffset + (index % 10) * (xSpacing / 10);
+          
+          // Calculate y position based on scan index (distribute vertically)
+          const y = (index * (containerHeight / Math.max(scans.length, 1))) % containerHeight;
+          
+          heatmapPoints.push({
+            x: Math.round(x),
+            y: Math.round(y),
+            value: normalizedValue
+          });
+        });
+        xOffset += xSpacing;
+      });
+      
+      // Find min and max values for heatmap
+      const values = heatmapPoints.map(point => point.value);
+      const minValue = Math.min(...values);
+      const maxValue = Math.max(...values);
+      
+      const data: HeatmapData = {
+        max: maxValue,
+        min: minValue,
+        data: heatmapPoints
+      };
+      
+      heatmapInstance.setData(data);
+    } else {
+      // If no data, set empty heatmap
+      const data: HeatmapData = {
+        max: 100,
+        min: 0,
+        data: []
+      };
+      heatmapInstance.setData(data);
+    }
   };
 
   useEffect(() => {
@@ -135,6 +174,7 @@ function HeatMapPage() {
       console.log(data);
     });
   }, []);
+
   // Initialize heatmap only after image is uploaded
   useEffect(() => {
     if (uploadedImage) {
@@ -151,60 +191,6 @@ function HeatMapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
-  // API function to send data to Postman mock endpoint
-  const sendToAPI = async (ip: string) => {
-    try {
-      setIsLoading(true);
-      setMessage(null);
-      
-      const response = await fetch('https://d9bbb8ed-6446-4926-a327-b313008215e9.mock.pstmn.io/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ serverIP: ip }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response:', data);
-        
-        // Only add to previous entries on successful API response
-        setPreviousEntries(prev => {
-          if (!prev.includes(ip)) {
-            return [...prev, ip];
-          }
-          return prev;
-        });
-        
-        setMessage({ type: 'success', text: `Server IP "${ip}" sent to API successfully!` });
-      } else {
-        console.error('API Error:', response.status, response.statusText);
-        setMessage({ type: 'error', text: `API Error: ${response.status} ${response.statusText}` });
-      }
-    } catch (error) {
-      console.error('Error sending data to API:', error);
-      setMessage({ type: 'error', text: 'Failed to connect to server.' });
-    } finally {
-      setIsLoading(false);
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (serverIP.trim()) {
-      sendToAPI(serverIP.trim());
-    }
-  };
-
-  // Handle dropdown selection
-  const handleDropdownSelect = (selectedIP: string) => {
-    setServerIP(selectedIP);
-  };
-
   // Handle file selection (store file but don't process yet)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
@@ -213,8 +199,6 @@ function HeatMapPage() {
     if (file) {
       console.log('Selected file:', file.name, 'Type:', file.type);
       setSelectedFile(file);
-      // Clear any previous error messages
-      setMessage(null);
     }
   };
 
@@ -245,8 +229,7 @@ function HeatMapPage() {
         reader.readAsDataURL(selectedFile);
       } else {
         console.log('Unsupported file type:', selectedFile.type);
-        setMessage({ type: 'error', text: 'Unsupported file type. Please upload JPG or PDF files.' });
-        setTimeout(() => setMessage(null), 3000);
+        alert('Unsupported file type. Please upload JPG or PDF files.');
       }
       
       // Close modal after upload
@@ -300,54 +283,6 @@ function HeatMapPage() {
               <p>Endpoint info goes here</p>
             </Row>
           </div>
-          <Row className='server-ip'>
-            <Form onSubmit={handleSubmit}>
-              {message && (
-                <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="mb-3">
-                  {message.text}
-                </Alert>
-              )}
-              <Form.Group className="mb-3">
-                <Form.Label>Server IP</Form.Label>
-                <div className="input-group">
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter Server IP"
-                    value={serverIP}
-                    onChange={(e) => setServerIP(e.target.value)}
-                    required
-                  />
-                  <Dropdown>
-                    <Dropdown.Toggle variant="outline-secondary" id="dropdown-basic">
-                      Saved Server IP's
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      {previousEntries.length > 0 ? (
-                        previousEntries.map((entry, index) => (
-                          <Dropdown.Item 
-                            key={index} 
-                            onClick={() => handleDropdownSelect(entry)}
-                          >
-                            {entry}
-                          </Dropdown.Item>
-                        ))
-                      ) : (
-                        <Dropdown.Item className='disabled' disabled>No previous entries</Dropdown.Item>
-                      )}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </div>
-              </Form.Group>
-              <Button 
-                type="submit" 
-                variant="primary" 
-                disabled={isLoading}
-                className="w-100"
-              >
-                {isLoading ? 'Sending...' : 'Set Server IP'}
-              </Button>
-            </Form>
-          </Row>
         </Col>
         <Col className='heatmap-container' lg={9}>
           {!uploadedImage && (
