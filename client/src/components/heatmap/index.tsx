@@ -58,22 +58,7 @@ function HeatMapPage() {
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
 
-  const getScanData = async () => {
-    // Get the scan data from the server
-    try {
-      const response = await fetch('http://localhost:3000/api/scan-data');
-    if (response.ok) {
-      const data = await response.json();
-      return data;
-    } else {
-      console.error('Error fetching scan data:', response.statusText);
-      return null;
-    }
-  } catch (error) {
-    console.error('Error fetching scan data:', error);
-    return null;
-  }
-  };
+
   // Function to initialize and display heatmap with hardcoded example data
   const initializeHeatmap = () => {
     // Don't initialize if heatmap already exists

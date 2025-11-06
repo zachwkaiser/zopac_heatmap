@@ -49,8 +49,9 @@ interface WifiScan {
 
 
 export async function getScanData(): Promise<WifiScan[]> {
-
-    const response = await getData('http://localhost:3000/api/scan-data');
+    // Use the secure proxy route instead of calling the endpoint directly
+    // The proxy route handles API key authentication server-side
+    const response = await getData('http://localhost:3000/api/client/scan-data');
 
     if (response.success) {
         const result = response.data.data as WifiScan[];
