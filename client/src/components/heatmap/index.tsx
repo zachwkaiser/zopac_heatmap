@@ -103,6 +103,7 @@ function HeatMapPage() {
 
     // Hardcoded example data points (will be replaced with API data later)
     const exampleData = {
+      
       max: 100,
       min: 0,
       data: [
