@@ -146,7 +146,7 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
 
       {isSignupOpen && (
         <div
-          className="modal-overlay"
+          className="homepage-modal-overlay"
           role="dialog"
           aria-modal="true"
           aria-labelledby="signup-title"
@@ -154,10 +154,10 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
             if (e.target === e.currentTarget) handleCloseSignup();
           }}
         >
-          <div className="modal">
-            <div className="modal-header">
-              <h2 id="signup-title" className="modal-title">Create your account</h2>
-              <button className="close-btn" aria-label="Close" onClick={handleCloseSignup}>
+          <div className="homepage-modal">
+            <div className="homepage-modal-header">
+              <h2 id="signup-title" className="homepage-modal-title">Create your account</h2>
+              <button className="homepage-modal-close-btn" aria-label="Close" onClick={handleCloseSignup}>
                 ×
               </button>
             </div>
@@ -193,7 +193,7 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
                   required
                 />
               </div>
-              <div className="modal-actions">
+              <div className="homepage-modal-actions">
                 <button type="button" className="secondary" onClick={handleCloseSignup}>Cancel</button>
                 <button type="submit">Create Account</button>
               </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
 import './style.css';
+import { getScanData } from './getData';
 
 // Heatmap.js type definitions
 interface HeatmapDataPoint {
@@ -56,6 +57,8 @@ function HeatMapPage() {
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
+
+
   // Function to initialize and display heatmap with hardcoded example data
   const initializeHeatmap = () => {
     // Don't initialize if heatmap already exists
@@ -100,6 +103,7 @@ function HeatMapPage() {
 
     // Hardcoded example data points (will be replaced with API data later)
     const exampleData = {
+      
       max: 100,
       min: 0,
       data: [
@@ -125,6 +129,12 @@ function HeatMapPage() {
     heatmapInstance.setData(exampleData);
   };
 
+  useEffect(() => {
+    // .then is the syntax for getting the data from the promise
+    getScanData().then(data => {
+      console.log(data);
+    });
+  }, []);
   // Initialize heatmap only after image is uploaded
   useEffect(() => {
     if (uploadedImage) {
@@ -250,14 +260,12 @@ function HeatMapPage() {
         <Col className='information-container' lg={3}>
           <div className='top-content'>
             <div className='button-container'>
-              <Button className='info-button'>Settings</Button>
-              
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
-              <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered>
-                <Modal.Header>
-                  <Modal.Title>Upload Map</Modal.Title>
+              <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered className='modal-map-upload'>
+                <Modal.Header className='modal-map-upload-header'>
+                  <Modal.Title className='modal-map-upload-title'>Upload Map</Modal.Title>
                 </Modal.Header>
-                <Modal.Body>
+                <Modal.Body className='modal-map-upload-body'>
                   <Form.Group className="mb-3">
                     <Form.Label>Select Map File</Form.Label>
                     <Form.Control
