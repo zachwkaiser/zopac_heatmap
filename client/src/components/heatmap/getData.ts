@@ -9,7 +9,7 @@ import axios from 'axios';
 
 interface DataResponse {
   success: boolean;
-  data: any;
+  data: WifiScan[];
   error?: string;
   // ? means that the property is optional
 }
@@ -32,7 +32,7 @@ const getData = async (url: string): Promise<DataResponse> => {
     console.error('Error getting data:', error);
     return {
       success: false,
-      data: null,
+      data: [],
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
@@ -54,7 +54,7 @@ export async function getScanData(): Promise<WifiScan[]> {
     const response = await getData('http://localhost:3000/api/client/scan-data');
 
     if (response.success) {
-        const result = response.data.data as WifiScan[];
+        const result = response.data as WifiScan[];
         return result;
         // response.data is the data from the response variable, but since
         // the getData function returns a DataResponse interface, we need to
