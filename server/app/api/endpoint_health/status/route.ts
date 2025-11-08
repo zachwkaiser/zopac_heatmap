@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import postgres from 'postgres';
 
+// Rate limiting map: endpoint_id -> last update timestamp
+const updateRateLimit = new Map<string, Date>();
+const RATE_LIMIT_MS = 5000; // 5 seconds between updates
 
 const lastSeenMap = new Map<string, Date>();
 
@@ -15,7 +18,18 @@ async function getDb() {
     });
 }
 
-// POST /api/endpoint/status
+/**
+ * POST /api/endpoint_health/status
+ * 
+ * Endpoint for updating the health status of a monitoring endpoint
+ * 
+ * @param request.body.endpoint_id - Unique identifier for the endpoint
+ * @param request.body.scan_count - Number of scans performed (optional, defaults to 1)
+ * 
+ * @returns {Object} Response containing endpoint status details
+ * @throws {400} If endpoint_id is missing or scan_count is invalid
+ * @throws {429} If rate limit is exceeded
+ */
 export async function POST(request: NextRequest) {
     try {
         const sql = await getDb();
@@ -26,6 +40,24 @@ export async function POST(request: NextRequest) {
             await sql.end();
             return NextResponse.json({ error: 'endpoint_id is required' }, { status: 400 });
         }
+
+        // Validate scan_count
+        if (typeof scan_count !== 'number' || scan_count < 0 || !Number.isInteger(scan_count)) {
+            await sql.end();
+            return NextResponse.json({ error: 'scan_count must be a non-negative integer' }, { status: 400 });
+        }
+
+        // Rate limiting check
+        const lastUpdate = updateRateLimit.get(endpoint_id);
+        const now = new Date();
+        if (lastUpdate && (now.getTime() - lastUpdate.getTime()) < RATE_LIMIT_MS) {
+            await sql.end();
+            return NextResponse.json({ 
+                error: 'Rate limit exceeded',
+                retryAfter: RATE_LIMIT_MS - (now.getTime() - lastUpdate.getTime())
+            }, { status: 429 });
+        }
+        updateRateLimit.set(endpoint_id, now);
 
         
         await sql`
@@ -90,7 +122,20 @@ export async function POST(request: NextRequest) {
 }
 
 
-// GET /api/endpoint/status
+/**
+ * GET /api/endpoint_health/status
+ * 
+ * Retrieve the health status of endpoints
+ * 
+ * @param request.searchParams.endpoint_id - Optional: Get status for a specific endpoint
+ * 
+ * @returns {Object} Response containing:
+ *   - success: boolean
+ *   - count: number of endpoints
+ *   - endpoints: array of endpoint status objects or single endpoint object
+ * @throws {404} If specific endpoint_id is not found
+ * @throws {500} If database query fails
+ */
 export async function GET(request: NextRequest) {
     try {
         const sql = await getDb();
