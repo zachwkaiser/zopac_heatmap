@@ -11,6 +11,7 @@ HEADERS = {
     "Authorization": f"Bearer {Config.api_key}",
 }
 
+
 def payload():
     return {
         "endpoint_id": Config.endpoint_id,
@@ -19,9 +20,11 @@ def payload():
         "hostname": socket.gethostname(),
     }
 
+
 def try_send():
     r = requests.post(STATUS_URL, json=payload(), headers=HEADERS, timeout=10)
     return 200 <= r.status_code < 300, r.status_code
+
 
 def main():
     # Boot phase: retry every 60s until first success
@@ -52,6 +55,7 @@ def main():
             except requests.RequestException as e:
                 print(f"[HEARTBEAT] Network error: {e}; retry in 60s...")
             time.sleep(60)
+
 
 if __name__ == "__main__":
     main()
