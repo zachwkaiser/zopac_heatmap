@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 start_at_time.py
 
