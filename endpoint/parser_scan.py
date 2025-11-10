@@ -36,7 +36,7 @@ def parse_line(line: str) -> dict:
     ts = float(ts_match.group(1))
     rssi = int(rssi_match.group(1))
     mac = normal_mac(mac_match.group(1))
-    return {"mac": mac, "rssi": rssi, "ts": ts}
+    return {"mac": mac, "rssi": rssi, "timestamp": ts}
 
 
 # CLI driver
