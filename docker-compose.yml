@@ -34,8 +34,8 @@ services:
       - POSTGRES_PASSWORD=devpass
       - POSTGRES_URL=postgres://appuser:devpass@db:5432/appdb
       - CLIENT_URL=http://localhost:80
-      - AUTH_SECRET=${AUTH_SECRET:-pRpYs5JEwZLgN+zjvSwCTcLLB8SSEQZBkTY5dWZwfuc=}
-      - ENDPOINT_API_KEY=${ENDPOINT_API_KEY:-fJ/Bp/4ADoUq9nGhpSuq8BTvkGeAzvJAbF/ez2Gmcf4=}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ENDPOINT_API_KEY=${ENDPOINT_API_KEY}
     depends_on:
       db:
         condition: service_healthy
