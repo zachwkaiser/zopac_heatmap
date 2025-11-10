@@ -47,9 +47,15 @@ declare global {
 
 function HeatMapPage() {
   const [showMapUpload, setShowMapUpload] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(() => {
+    // Load saved image from localStorage on initial render
+    return localStorage.getItem('heatmap_background_image');
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileType, setFileType] = useState<string | null>(null);
+  const [fileType, setFileType] = useState<string | null>(() => {
+    // Load saved file type from localStorage on initial render
+    return localStorage.getItem('heatmap_file_type');
+  });
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
@@ -216,6 +222,9 @@ function HeatMapPage() {
           const result = event.target?.result as string;
           setUploadedImage(result);
           setFileType('image');
+          // Save to localStorage for persistence across page refreshes
+          localStorage.setItem('heatmap_background_image', result);
+          localStorage.setItem('heatmap_file_type', 'image');
         };
         reader.readAsDataURL(selectedFile);
       } else if (selectedFile.type === 'application/pdf') {
@@ -225,6 +234,9 @@ function HeatMapPage() {
           const result = event.target?.result as string;
           setUploadedImage(result);
           setFileType('pdf');
+          // Save to localStorage for persistence across page refreshes
+          localStorage.setItem('heatmap_background_image', result);
+          localStorage.setItem('heatmap_file_type', 'pdf');
         };
         reader.readAsDataURL(selectedFile);
       } else {
@@ -245,7 +257,7 @@ function HeatMapPage() {
             <div className='button-container'>
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
               <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered className='modal-map-upload'>
-                <Modal.Header className='modal-map-upload-header'>
+                <Modal.Header closeButton className='modal-map-upload-header'>
                   <Modal.Title className='modal-map-upload-title'>Upload Map</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className='modal-map-upload-body'>
