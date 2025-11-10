@@ -45,7 +45,8 @@ export function rssiToDistance(
 
 /**
  * Calculate device position using trilateration with 3+ endpoints
- * Uses least squares method for overdetermined systems (>3 points)
+ * Uses inverse-distance-squared weighting for better accuracy
+ * Closer endpoints (stronger signals) have exponentially more influence
  * 
  * @param scans - Array of scans with endpoint positions and distances
  * @returns Estimated position {x, y} or null if insufficient data
@@ -55,43 +56,54 @@ export function trilaterate(scans: ScanWithDistance[]): Position | null {
     return null; // Need at least 3 points for 2D trilateration
   }
 
-  // Use least squares method for better accuracy with multiple points
-  // Minimize sum of squared errors: (x - x_i)^2 + (y - y_i)^2 = d_i^2
-  
-  const A: number[][] = [];
-  const b: number[] = [];
+  // Use inverse-distance-squared weighting
+  // Closer endpoints (stronger signals) have much more influence
+  let totalWeight = 0;
+  let weightedX = 0;
+  let weightedY = 0;
 
-  // Use first point as reference
-  const ref = scans[0];
-  
-  for (let i = 1; i < scans.length; i++) {
-    const curr = scans[i];
+  for (const scan of scans) {
+    // Weight = 1 / distance^2 (inverse square law)
+    // Add small constant to avoid division by zero
+    const weight = 1 / (Math.pow(scan.distance, 2) + 0.01);
     
-    // Build linear system: 2(x_i - x_1)*x + 2(y_i - y_1)*y = ...
-    const dx = curr.position.x - ref.position.x;
-    const dy = curr.position.y - ref.position.y;
-    
-    const rightSide = 
-      Math.pow(curr.position.x, 2) - Math.pow(ref.position.x, 2) +
-      Math.pow(curr.position.y, 2) - Math.pow(ref.position.y, 2) +
-      Math.pow(ref.distance, 2) - Math.pow(curr.distance, 2);
-    
-    A.push([2 * dx, 2 * dy]);
-    b.push(rightSide);
-  }
-
-  // Solve using least squares: (A^T * A)^-1 * A^T * b
-  const solution = leastSquaresSolve(A, b);
-  
-  if (!solution) {
-    // Fallback to centroid if linear system fails
-    return calculateCentroid(scans);
+    weightedX += scan.position.x * weight;
+    weightedY += scan.position.y * weight;
+    totalWeight += weight;
   }
 
   return {
-    x: solution[0],
-    y: solution[1]
+    x: weightedX / totalWeight,
+    y: weightedY / totalWeight
   };
+}
+
+/**
+ * Calculate weights for each scan based on signal strength
+ * Stronger signals (less negative RSSI) get higher weights
+ * Uses aggressive exponential scaling to maximize differentiation
+ * 
+ * @param scans - Array of scans with RSSI values
+ * @returns Normalized weights that sum to 1
+ */
+function calculateWeights(scans: ScanWithDistance[]): number[] {
+  // Find the strongest (least negative) RSSI for normalization
+  const maxRssi = Math.max(...scans.map(s => s.rssi));
+  
+  // Convert RSSI to weights using very aggressive exponential scaling
+  // This heavily favors stronger signals
+  // Using: weight = e^((RSSI - maxRSSI) / scaleFactor)
+  // Smaller scaleFactor = more aggressive weighting
+  const scaleFactor = 2; // Very aggressive: 2 dBm difference = ~2.7x weight difference
+  
+  const rawWeights = scans.map(scan => {
+    const rssiDiff = scan.rssi - maxRssi; // Will be 0 or negative
+    return Math.exp(rssiDiff / scaleFactor);
+  });
+
+  // Normalize so weights sum to 1
+  const totalWeight = rawWeights.reduce((sum, w) => sum + w, 0);
+  return rawWeights.map(w => w / totalWeight);
 }
 
 /**
@@ -140,15 +152,19 @@ function leastSquaresSolve(A: number[][], b: number[]): number[] | null {
 /**
  * Calculate weighted centroid as fallback localization method
  * Weights are inverse of distance (closer endpoints have more weight)
+ * 
+ * @param scans - Array of scans with positions and distances
+ * @param weights - Optional pre-calculated weights based on RSSI confidence
  */
-function calculateCentroid(scans: ScanWithDistance[]): Position {
+function calculateCentroid(scans: ScanWithDistance[], weights?: number[]): Position {
   let totalWeight = 0;
   let weightedX = 0;
   let weightedY = 0;
 
-  for (const scan of scans) {
-    // Use inverse distance as weight (closer = higher weight)
-    const weight = 1 / (scan.distance + 0.1); // Add small constant to avoid division by zero
+  for (let i = 0; i < scans.length; i++) {
+    const scan = scans[i];
+    // Use provided weights if available, otherwise use inverse distance
+    const weight = weights ? weights[i] : (1 / (scan.distance + 0.1));
     
     weightedX += scan.position.x * weight;
     weightedY += scan.position.y * weight;
@@ -159,6 +175,13 @@ function calculateCentroid(scans: ScanWithDistance[]): Position {
     x: weightedX / totalWeight,
     y: weightedY / totalWeight
   };
+}
+
+/**
+ * Wrapper for weighted centroid calculation
+ */
+function calculateWeightedCentroid(scans: ScanWithDistance[], weights: number[]): Position {
+  return calculateCentroid(scans, weights);
 }
 
 /**
