@@ -27,7 +27,7 @@ echo "Raw output  → $RAW_LOG"
 echo "Parsed JSON → $PARSED_LOG"
 echo "Press CTRL + C to stop."
 
-# --- Run tcpdump and parse in real time ---
+# --- Run tcpdump and stream in real time ---
 sudo tcpdump -i "$IFACE" -s 0 -l -e -tt -n -vvv \
 | tee "$RAW_LOG" \
-| $PYTHON -u /home/pi/WiFi_Project/parser_scan.py --out "$PARSED_LOG"
+| $PYTHON -u /home/pi/WiFi_Project/stream.py --tee-jsonl "$PARSED_LOG"

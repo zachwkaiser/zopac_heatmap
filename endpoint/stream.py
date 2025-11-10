@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 import time
 import json
@@ -5,11 +6,11 @@ import signal
 import logging
 import argparse
 from typing import Optional
+from urllib.parse import urljoin
 
 from config import load_config
 from parser_scan import parse_line
 from shipper import Shipper
-
 
 _RUNNING = True
 
@@ -61,14 +62,27 @@ def main():
     )
     log = logging.getLogger("stream")
 
-    # Shipper wiring (matches your Config field names)
+    # Build the full ingest URL safely from the base SERVER_URL
+    base = cfg.server_url.rstrip("/") + "/"
+    ingest_url = urljoin(base, "api/endpoint/scan-data")
+    log.info(
+        "Starting stream (endpoint_id=%s, iface=%s, ingest=%s)",
+        cfg.endpoint_id,
+        cfg.wlan_iface,
+        ingest_url,
+    )
+
+    # Shipper wiring
     ship = Shipper(
-        server_url=cfg.server_url,
+        server_url=ingest_url,  # full route
         api_key=cfg.api_key,
         batch_size=cfg.batch_max,
-        flush_ms=cfg.batch_interval * 1000,  # seconds → ms
-        timeout_s=cfg.heartbeat_sec,
-        use_gzip=True,
+        flush_ms=cfg.batch_interval
+        * 1000,  # seconds → ms (ensure loader provides seconds)
+        timeout_s=15,  # HTTP timeout, not heartbeat
+        use_gzip=False,  # set True only if server handles gzip
+        auth_style="x-api-key",
+        endpoint_id=cfg.endpoint_id,
     )
 
     # Optional local JSONL tee file for debugging
@@ -81,13 +95,6 @@ def main():
     signal.signal(signal.SIGINT, _signal_handler)
     signal.signal(signal.SIGTERM, _signal_handler)
 
-    log.info(
-        "Starting stream (endpoint_id=%s, iface=%s, server=%s)",
-        cfg.endpoint_id,
-        cfg.wlan_iface,
-        cfg.server_url,
-    )
-
     last_log = time.time()
     stats = {"seen": 0, "parsed": 0, "sent_enqueued": 0}
 
@@ -99,7 +106,6 @@ def main():
             stats["seen"] += 1
             rec = parse_line(raw_line)
             if rec is None:
-                # Skip unparseable/noise lines quietly at INFO level; DEBUG shows them.
                 if log.isEnabledFor(logging.DEBUG):
                     log.debug("Skipped line: %r", raw_line.strip())
                 continue
@@ -119,13 +125,12 @@ def main():
             now = time.time()
             if now - last_log >= 5:
                 log.info(
-                    "seen=%d parsed=%d enqueued=%d (batch_max=%d, flush=%ds, hb=%ds)",
+                    "seen=%d parsed=%d enqueued=%d (batch_max=%d, flush=%ds)",
                     stats["seen"],
                     stats["parsed"],
                     stats["sent_enqueued"],
                     cfg.batch_max,
                     cfg.batch_interval,
-                    cfg.heartbeat_sec,
                 )
                 last_log = now
 
@@ -134,7 +139,6 @@ def main():
 
     except Exception as e:
         log.exception("Fatal error in stream: %s", e)
-        # Try to flush what we have before exiting
         try:
             ship.flush()
         except Exception:
