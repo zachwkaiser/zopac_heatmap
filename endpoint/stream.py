@@ -74,15 +74,15 @@ def main():
 
     # Shipper wiring
     ship = Shipper(
-        server_url=ingest_url,              # full route
+        server_url=ingest_url,  # full route
         api_key=cfg.api_key,
         batch_size=cfg.batch_max,
-        flush_ms=cfg.batch_interval * 1000, # seconds → ms (ensure loader provides seconds)
-        timeout_s=15,                       # HTTP timeout, not heartbeat
-        use_gzip=False,                     # set True only if server handles gzip
+        flush_ms=cfg.batch_interval
+        * 1000,  # seconds → ms (ensure loader provides seconds)
+        timeout_s=15,  # HTTP timeout, not heartbeat
+        use_gzip=False,  # set True only if server handles gzip
         auth_style="x-api-key",
-        endpoint_id=cfg.endpoint_id
-
+        endpoint_id=cfg.endpoint_id,
     )
 
     # Optional local JSONL tee file for debugging

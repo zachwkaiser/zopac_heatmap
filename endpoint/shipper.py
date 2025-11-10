@@ -195,7 +195,11 @@ class Shipper:
             if self.timestamp_as_iso and isinstance(rr.get("timestamp"), (int, float)):
                 rr["timestamp"] = self._to_iso8601(float(rr["timestamp"]))
 
-            if self.endpoint_id and self.include_endpoint_in_records and "endpoint_id" not in rr:
+            if (
+                self.endpoint_id
+                and self.include_endpoint_in_records
+                and "endpoint_id" not in rr
+            ):
                 rr["endpoint_id"] = self.endpoint_id
                 rr.pop("endpointId", None)
 
@@ -205,7 +209,9 @@ class Shipper:
         if self.endpoint_id and self.include_endpoint_top_level:
             payload["endpointId"] = self.endpoint_id
 
-        return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode(
+            "utf-8"
+        )
 
     def _post_records(self, records: List[Dict[str, Any]]) -> None:
         """POST the records to the server with retries/backoff."""
@@ -232,7 +238,9 @@ class Shipper:
                     status = getattr(resp, "status", 200)
                     if 200 <= status < 300:
                         if self._log.isEnabledFor(logging.DEBUG):
-                            self._log.debug("POST ok: sent=%d status=%s", len(records), status)
+                            self._log.debug(
+                                "POST ok: sent=%d status=%s", len(records), status
+                            )
                         return
                     # Non-2xx: try to read server’s message to help debugging
                     msg = ""
@@ -240,7 +248,13 @@ class Shipper:
                         msg = resp.read(1024).decode("utf-8", "ignore")
                     except Exception:
                         pass
-                    raise error.HTTPError(self.server_url, status, msg or f"HTTP {status}", hdrs=None, fp=None)
+                    raise error.HTTPError(
+                        self.server_url,
+                        status,
+                        msg or f"HTTP {status}",
+                        hdrs=None,
+                        fp=None,
+                    )
 
             except (error.URLError, error.HTTPError, TimeoutError) as e:
                 status = getattr(e, "code", None)

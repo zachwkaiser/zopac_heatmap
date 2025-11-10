@@ -23,7 +23,7 @@ def build_status_url(base_url: str) -> str:
 def make_headers(api_key: str) -> dict:
     return {
         "Content-Type": "application/json",
-        "x-api-key": api_key,                 # must match your server’s auth
+        "x-api-key": api_key,  # must match your server’s auth
         "User-Agent": "WiFiEndpoint/1.0 status",
     }
 
@@ -60,12 +60,16 @@ def main():
     # Boot phase: retry every 60s until the first success
     while True:
         try:
-            ok, code, body = try_send(status_url, headers, build_payload(cfg.endpoint_id))
+            ok, code, body = try_send(
+                status_url, headers, build_payload(cfg.endpoint_id)
+            )
             if ok:
                 print(f"[HEARTBEAT] Initial status sent ({code}).")
                 break
             else:
-                print(f"[HEARTBEAT] Server responded {code}: {body} ... retrying in 60s")
+                print(
+                    f"[HEARTBEAT] Server responded {code}: {body} ... retrying in 60s"
+                )
         except requests.RequestException as e:
             print(f"[HEARTBEAT] Network error: {e} ... retrying in 60s")
         time.sleep(60)
@@ -75,7 +79,9 @@ def main():
         time.sleep(interval)
         while True:
             try:
-                ok, code, body = try_send(status_url, headers, build_payload(cfg.endpoint_id))
+                ok, code, body = try_send(
+                    status_url, headers, build_payload(cfg.endpoint_id)
+                )
                 if ok:
                     print(f"[HEARTBEAT] Sent ({code}). Next in {interval} sec.")
                     break
