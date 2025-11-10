@@ -80,6 +80,9 @@ def main():
         flush_ms=cfg.batch_interval * 1000, # seconds → ms (ensure loader provides seconds)
         timeout_s=15,                       # HTTP timeout, not heartbeat
         use_gzip=False,                     # set True only if server handles gzip
+        auth_style="x-api-key",
+        endpoint_id=cfg.endpoint_id
+
     )
 
     # Optional local JSONL tee file for debugging
