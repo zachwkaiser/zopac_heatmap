@@ -4,6 +4,15 @@ import { rssiToDistance, trilaterate } from '@/app/lib/localization';
 
 const sql = postgres(process.env.POSTGRES_URL!);
 
+interface ScanData {
+  mac: string;
+  rssi: number;
+  timestamp: Date;
+  endpoint_id: string;
+  x: number;
+  y: number;
+}
+
 // GET /api/query/heatmap-data
 // Returns wifi scan data formatted for heatmap visualization
 export async function GET(request: NextRequest) {
@@ -46,13 +55,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Group scans by MAC address to calculate device positions
-    const deviceScans = new Map<string, any[]>();
+    const deviceScans = new Map<string, ScanData[]>();
     
     for (const scan of scans) {
       if (!deviceScans.has(scan.mac)) {
         deviceScans.set(scan.mac, []);
       }
-      deviceScans.get(scan.mac)!.push(scan);
+      deviceScans.get(scan.mac)!.push(scan as ScanData);
     }
 
     // Calculate device positions using trilateration
