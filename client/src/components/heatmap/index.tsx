@@ -45,6 +45,15 @@ declare global {
   }
 }
 
+interface EndpointPosition {
+  endpoint_id: string;
+  x: number;
+  y: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 function HeatMapPage() {
   const [showMapUpload, setShowMapUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(() => {
@@ -52,17 +61,15 @@ function HeatMapPage() {
     return localStorage.getItem('heatmap_background_image');
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [fileType, setFileType] = useState<string | null>(() => {
-    // Load saved file type from localStorage on initial render
-    return localStorage.getItem('heatmap_file_type');
-  });
+  const [fileType, setFileType] = useState<string | null>(null);
+  const [endpoints, setEndpoints] = useState<EndpointPosition[]>([]);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
 
-
-  // Function to initialize and display heatmap with API data
-  const initializeHeatmap = async () => {
+  // Function to initialize and display heatmap with hardcoded example data
+  const initializeHeatmap = () => {
     // Don't initialize if heatmap already exists
     if (heatmapInstanceRef.current) return;
 
@@ -79,7 +86,7 @@ function HeatMapPage() {
     }
   };
 
-  // Function to create heatmap instance with API data
+  // Function to create heatmap instance and fetch data from API
   const createHeatmapInstance = async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
@@ -103,74 +110,24 @@ function HeatMapPage() {
     const heatmapInstance = window.h337.create(config);
     heatmapInstanceRef.current = heatmapInstance;
 
-    // Fetch scan data from API
-    const wifiScans = await getScanData();
-    
-    // Transform WiFi scan data into heatmap data points
-    // Note: RSSI values are typically negative (-100 to 0), we'll normalize them
-    const heatmapPoints: HeatmapDataPoint[] = [];
-    
-    if (wifiScans.length > 0) {
-      // Get container dimensions for positioning
-      const container = heatmapContainerRef.current;
-      const containerWidth = container.offsetWidth || 800;
-      const containerHeight = container.offsetHeight || 600;
+    // Fetch data from API
+    try {
+      const response = await fetch('http://localhost:3000/api/query/heatmap-data');
+      const result = await response.json();
       
-      // Group scans by endpoint_id to position them
-      const endpointGroups = new Map<string, typeof wifiScans>();
-      wifiScans.forEach(scan => {
-        if (!endpointGroups.has(scan.endpoint_id)) {
-          endpointGroups.set(scan.endpoint_id, []);
-        }
-        endpointGroups.get(scan.endpoint_id)!.push(scan);
-      });
-      
-      // Create heatmap points from scan data
-      let xOffset = 0;
-      const endpointCount = endpointGroups.size;
-      const xSpacing = containerWidth / Math.max(endpointCount, 1);
-      
-      endpointGroups.forEach((scans, endpointId) => {
-        scans.forEach((scan, index) => {
-          // Normalize RSSI to a positive value (0-100 scale)
-          // RSSI ranges from -100 (weak) to 0 (strong), convert to 0-100
-          const normalizedValue = Math.max(0, Math.min(100, scan.rssi + 100));
-          
-          // Calculate x position based on endpoint
-          const x = xOffset + (index % 10) * (xSpacing / 10);
-          
-          // Calculate y position based on scan index (distribute vertically)
-          const y = (index * (containerHeight / Math.max(scans.length, 1))) % containerHeight;
-          
-          heatmapPoints.push({
-            x: Math.round(x),
-            y: Math.round(y),
-            value: normalizedValue
-          });
-        });
-        xOffset += xSpacing;
-      });
-      
-      // Find min and max values for heatmap
-      const values = heatmapPoints.map(point => point.value);
-      const minValue = Math.min(...values);
-      const maxValue = Math.max(...values);
-      
-      const data: HeatmapData = {
-        max: maxValue,
-        min: minValue,
-        data: heatmapPoints
-      };
-      
-      heatmapInstance.setData(data);
-    } else {
-      // If no data, set empty heatmap
-      const data: HeatmapData = {
-        max: 100,
-        min: 0,
-        data: []
-      };
-      heatmapInstance.setData(data);
+      if (result.success && result.data) {
+        // Set the data from API to display the heatmap
+        heatmapInstance.setData(result.data);
+        console.log('Heatmap data loaded from database:', result.count, 'points');
+      } else {
+        console.error('Failed to load heatmap data:', result.error);
+        // Fallback to empty data
+        heatmapInstance.setData({ max: 100, min: 0, data: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching heatmap data:', error);
+      // Fallback to empty data
+      heatmapInstance.setData({ max: 100, min: 0, data: [] });
     }
   };
 
@@ -179,6 +136,40 @@ function HeatMapPage() {
     getScanData().then(data => {
       console.log(data);
     });
+  }, []);
+
+  // Fetch endpoint positions on component mount
+  useEffect(() => {
+    const fetchEndpoints = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/query/endpoints');
+        const data = await response.json();
+        if (data.success && data.positions) {
+          setEndpoints(data.positions);
+        }
+      } catch (error) {
+        console.error('Error fetching endpoint positions:', error);
+      }
+    };
+    fetchEndpoints();
+  }, []);
+
+  // Fetch floorplan from server on component mount
+  useEffect(() => {
+    const fetchFloorplan = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/floorplan?floor=1');
+        const data = await response.json();
+        if (data.success && data.floorplan && data.floorplan.image_data) {
+          setUploadedImage(data.floorplan.image_data);
+          setFileType('image');
+          console.log('Floorplan loaded from server');
+        }
+      } catch (error) {
+        console.error('Error fetching floorplan:', error);
+      }
+    };
+    fetchFloorplan();
   }, []);
 
   // Initialize heatmap only after image is uploaded
@@ -208,8 +199,8 @@ function HeatMapPage() {
     }
   };
 
-  // Handle upload button click - process the selected file
-  const handleUploadClick = () => {
+  // Handle upload button click - upload the image to server
+  const handleUploadClick = async () => {
     if (selectedFile) {
       // Reset previous uploads
       setUploadedImage(null);
@@ -218,13 +209,42 @@ function HeatMapPage() {
       // Check if it's an image file
       if (selectedFile.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const result = event.target?.result as string;
-          setUploadedImage(result);
-          setFileType('image');
-          // Save to localStorage for persistence across page refreshes
-          localStorage.setItem('heatmap_background_image', result);
-          localStorage.setItem('heatmap_file_type', 'image');
+          
+          try {
+            // Upload to server
+            const response = await fetch('http://localhost:3000/api/floorplan', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                floor: 1,
+                name: selectedFile.name,
+                image_data: result,
+              }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+              console.log('Floorplan uploaded to server:', data.floorplan);
+              // Set the uploaded image for display
+              setUploadedImage(result);
+              setFileType('image');
+              setMessage({ type: 'success', text: 'Floorplan uploaded successfully!' });
+              setTimeout(() => setMessage(null), 3000);
+            } else {
+              console.error('Failed to upload floorplan:', data.error);
+              setMessage({ type: 'error', text: 'Failed to upload floorplan to server.' });
+              setTimeout(() => setMessage(null), 3000);
+            }
+          } catch (error) {
+            console.error('Error uploading floorplan:', error);
+            setMessage({ type: 'error', text: 'Error connecting to server.' });
+            setTimeout(() => setMessage(null), 3000);
+          }
         };
         reader.readAsDataURL(selectedFile);
       } else if (selectedFile.type === 'application/pdf') {
@@ -290,7 +310,22 @@ function HeatMapPage() {
 
             </div>
             <Row className='endpoint-info'>
-              <p>Endpoint info goes here</p>
+              <h5>Endpoint Information</h5>
+              {endpoints.length === 0 ? (
+                <p>No endpoints configured</p>
+              ) : (
+                <div className="endpoint-list">
+                  {endpoints.map((endpoint) => (
+                    <div key={endpoint.endpoint_id} className="endpoint-item">
+                      <strong>{endpoint.endpoint_id}</strong>: 
+                      Position ({endpoint.x}, {endpoint.y}) - 
+                      <span className={endpoint.is_active ? 'status-active' : 'status-inactive'}>
+                        {endpoint.is_active ? ' ✓ Active' : ' ✗ Inactive'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Row>
           </div>
         </Col>
@@ -350,7 +385,31 @@ function HeatMapPage() {
               }}
             />
           )}
-          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}></div>
+          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}>
+            {/* Render endpoint markers */}
+            {endpoints.map((endpoint) => (
+              <div
+                key={endpoint.endpoint_id}
+                style={{
+                  position: 'absolute',
+                  left: `${endpoint.x}px`,
+                  top: `${endpoint.y}px`,
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: 'black',
+                  border: `2px solid ${endpoint.is_active ? '#00ff00' : '#ff0000'}`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 10,
+                  boxShadow: endpoint.is_active 
+                    ? '0 0 8px 2px rgba(0,255,0,0.8), 0 0 12px 4px rgba(0,255,0,0.4)'
+                    : '0 0 8px 2px rgba(255,0,0,0.8), 0 0 12px 4px rgba(255,0,0,0.4)',
+                  pointerEvents: 'none'
+                }}
+                title={`${endpoint.endpoint_id} - ${endpoint.is_active ? 'Active' : 'Inactive'}`}
+              />
+            ))}
+          </div>
         </Col>
       </Row>
     </Container>
@@ -358,3 +417,4 @@ function HeatMapPage() {
 }
 
 export default HeatMapPage;
+

@@ -93,6 +93,51 @@
   margin-bottom: 20px;
 }
 
+.endpoint-info h5 {
+  color: #00ffff;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.endpoint-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.endpoint-item {
+  background: rgba(0, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.endpoint-item:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: rgba(0, 255, 255, 0.3);
+}
+
+.endpoint-item strong {
+  color: #00ffff;
+  margin-right: 5px;
+}
+
+.status-active {
+  color: #00ff00;
+  font-weight: 600;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+.status-inactive {
+  color: #ff0000;
+  font-weight: 600;
+  text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
 .server-ip {
   margin-top: auto;
   margin-bottom: 30px;
