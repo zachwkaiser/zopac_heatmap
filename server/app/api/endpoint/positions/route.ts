@@ -16,7 +16,7 @@ export async function GET() {
     });
 
     const positions = await sql`
-      SELECT endpoint_id, x, y, floor, description, created_at, updated_at
+      SELECT endpoint_id, x, y, is_active, created_at, updated_at
       FROM endpoint_positions
       ORDER BY endpoint_id;
     `;
@@ -26,7 +26,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       count: positions.length,
-      data: positions
+      positions: positions
     });
   } catch (error) {
     console.error('Error fetching endpoint positions:', error);
