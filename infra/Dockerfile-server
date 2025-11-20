@@ -1,0 +1,21 @@
+# Use the official Node.js 18 Alpine image as base
+FROM node:18-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json (if available)
+# This is done before copying the rest of the code to leverage Docker layer caching
+COPY server/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy the rest of the application code
+COPY server/ .
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Define the command to run the application
+CMD ["npm", "start"]

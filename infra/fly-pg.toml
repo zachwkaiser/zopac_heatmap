@@ -1,0 +1,31 @@
+# fly.toml app configuration file generated for pgtest-whatever-inc on 2025-11-19T19:08:46-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'pgtest-whatever-inc'
+primary_region = 'iad'
+
+[build]
+dockerfile = "Dockerfile-pg"
+
+[[services]]
+  internal_port = 5432
+  auto_start_machines = true
+  min_machines_running = 1
+  http_checks = []
+  protocol = "tcp"
+  processes = ['app']
+  
+  [[services.ports]]
+    port = 5432
+
+[env]
+  POSTGRES_USER = "admin"
+
+[[vm]]
+  size = 'shared-cpu-1x'
+
+[mounts]
+  source = "pgdata"
+  destination = "/var/lib/postgresql"
