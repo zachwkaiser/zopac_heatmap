@@ -3,11 +3,11 @@ import postgres from 'postgres';
 import { invoices, customers, revenue, users } from '../../lib/placeholder-data';
 
 const sql = postgres({
-  host: 'localhost',
-  port: 5432,
-  database: 'appdb',
-  username: 'appuser',
-  password: 'devpass',
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: Number(process.env.POSTGRES_PORT || 5432),
+  database: process.env.POSTGRES_DATABASE || 'appdb',
+  username: process.env.POSTGRES_USER || 'appuser',
+  password: process.env.POSTGRES_PASSWORD || 'devpass',
 });
 
 async function seedUsers() {

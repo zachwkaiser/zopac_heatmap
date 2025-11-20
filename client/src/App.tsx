@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import HomePage from './components/homepage';
 import HeatMapPage from './components/heatmap';
+import Settings from './components/settings';
 import NavBar from './components/navbar';
 import './App.css';
 
-export type Pages = 'Home' | 'Heat map';
+export type Pages = 'Home' | 'Heat map' | 'Settings';
 
 export interface Route {
   name: Pages;
@@ -38,6 +39,10 @@ const App = () => {
       {
         name: 'Heat map',
         element: isAuthenticated ? <HeatMapPage /> : <p style={{ textAlign: 'center' }}>Please log in to access this page.</p>,
+      },
+      {
+        name: 'Settings',
+        element: isAuthenticated ? <Settings /> : <p style={{ textAlign: 'center' }}>Please log in to access this page.</p>,
       },
     ],
     [isAuthenticated]

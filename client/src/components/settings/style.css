@@ -1,0 +1,76 @@
+.settings {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  min-height: 100vh;
+}
+
+.settings h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.settings-content {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-item label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e5e7eb;
+}
+
+.enlarge-text-btn {
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.enlarge-text-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.enlarge-text-btn:active {
+  transform: translateY(0);
+}
+
+/* Large text mode */
+.settings.large-text {
+  font-size: 1.25rem;
+}
+
+.settings.large-text h1 {
+  font-size: 2.5rem;
+}
+
+.settings.large-text .setting-item label {
+  font-size: 1.25rem;
+}
+
+.settings.large-text .enlarge-text-btn {
+  font-size: 1.15rem;
+  padding: 0.6rem 1.75rem;
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './style.css';
 
 interface HomePageProps {
@@ -9,30 +9,100 @@ interface HomePageProps {
 function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const [testCredentials, setTestCredentials] = useState({
-    username: 'admin@gmail.com',
-    password: 'password',
-  });
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirm, setSignupConfirm] = useState('');
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (isCreatingAccount) {
-      setTestCredentials({ username: email, password });
-      alert('Account created successfully! You can now log in with your new credentials.');
-      setIsCreatingAccount(false);
-    } else {
-      if (email === testCredentials.username && password === testCredentials.password) {
-        setIsAuthenticated(true);
-        alert('Login successful!');
-      } else {
-        alert('Invalid email or password. Please try again.');
-      }
-    }
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json',},
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-    setEmail('');
-    setPassword('');
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Invalid email or password. Please try again.');
+        return;
+      }
+
+      setIsAuthenticated(true);
+      alert('Login successful!');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Failed to log in. Please check your connection and try again.');
+    }
+  };
+
+  const handleOpenSignup = () => {
+    setIsSignupOpen(true);
+  };
+
+  const handleCloseSignup = () => {
+    setIsSignupOpen(false);
+    setSignupEmail('');
+    setSignupPassword('');
+    setSignupConfirm('');
+  };
+
+  // Close popup on Escape key
+  useEffect(() => {
+    if (!isSignupOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleCloseSignup();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSignupOpen]);
+
+  const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!signupEmail || !signupPassword) {
+      alert('Please fill in all required fields.');
+      return;
+    }
+    if (signupPassword !== signupConfirm) {
+      alert('Passwords do not match.');
+      return;
+    }
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: signupEmail,
+          password: signupPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to create account.');
+        return;
+      }
+
+      alert('Account created successfully! You can now log in with your new credentials.');
+      handleCloseSignup();
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('Failed to create account. Please check your connection and try again.');
+    }
   };
 
   if (isAuthenticated) {
@@ -68,14 +138,69 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
             required
           />
         </div>
-        <button type="submit">{isCreatingAccount ? 'Create Account' : 'Log In'}</button>
+        <button type="submit">Log In</button>
       </form>
-      <button
-        className="toggle-button"
-        onClick={() => setIsCreatingAccount(!isCreatingAccount)}
-      >
-        {isCreatingAccount ? 'Back to Login' : 'Create an Account'}
+      <button className="toggle-button" onClick={handleOpenSignup}>
+        Create an Account
       </button>
+
+      {isSignupOpen && (
+        <div
+          className="homepage-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="signup-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseSignup();
+          }}
+        >
+          <div className="homepage-modal">
+            <div className="homepage-modal-header">
+              <h2 id="signup-title" className="homepage-modal-title">Create your account</h2>
+              <button className="homepage-modal-close-btn" aria-label="Close" onClick={handleCloseSignup}>
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSignupSubmit}>
+              <div className="form-group">
+                <label htmlFor="signup-email">Email</label>
+                <input
+                  type="email"
+                  id="signup-email"
+                  value={signupEmail}
+                  onChange={(e) => setSignupEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="signup-password">Password</label>
+                <input
+                  type="password"
+                  id="signup-password"
+                  value={signupPassword}
+                  onChange={(e) => setSignupPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="signup-confirm">Confirm Password</label>
+                <input
+                  type="password"
+                  id="signup-confirm"
+                  value={signupConfirm}
+                  onChange={(e) => setSignupConfirm(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="homepage-modal-actions">
+                <button type="button" className="secondary" onClick={handleCloseSignup}>Cancel</button>
+                <button type="submit">Create Account</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

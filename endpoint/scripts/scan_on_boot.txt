@@ -1,0 +1,22 @@
+This is the layout of a configuration file that will be on every endpoint. The purpose is to tell the Pi what to run automatically on boot.
+It will use a .service extension
+
+[Unit]
+Description=Wi-Fi Endpoint Capture Service
+Wants=network-online.target
+After=network-online.target local-fs.target
+
+[Service]
+WorkingDirectory=/home/pi/WiFi_Project
+
+ExecStartPre=/usr/bin/bash /home/pi/WiFi_Project/setup_monitor.sh wlan1
+ExecStart=/usr/bin/bash /home/pi/WiFi_Project/capture_wifi.sh wlan1 /home/pi/logs
+
+User=pi
+Restart=always
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

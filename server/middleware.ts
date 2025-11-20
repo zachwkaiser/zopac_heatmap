@@ -1,9 +1,44 @@
 import NextAuth from 'next-auth';
 import { authConfig } from './auth.config';
- 
-export default NextAuth(authConfig).auth;
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// API key validation for endpoint routes
+function validateApiKey(request: NextRequest) {
+  const apiKey = request.headers.get('x-api-key');
+  const validKey = process.env.ENDPOINT_API_KEY;
+  
+  if (!apiKey || apiKey !== validKey) {
+    return NextResponse.json(
+      { error: 'Unauthorized - Invalid or missing API key' },
+      { status: 401 }
+    );
+  }
+  
+  return null; // Valid API key
+}
+
+const authMiddleware = NextAuth(authConfig).auth;
+
+export default function middleware(request: NextRequest) {
+  // Check if this is an endpoint API route
+  if (request.nextUrl.pathname.startsWith('/api/endpoint')) {
+    const apiKeyError = validateApiKey(request);
+    if (apiKeyError) {
+      return apiKeyError;
+    }
+    return NextResponse.next();
+  }
+  
+  // For all other routes, use NextAuth middleware
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return authMiddleware(request as any);
+}
  
 export const config = {
-  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
-  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
+  // Apply middleware to endpoint API routes and protected pages
+  matcher: [
+    '/api/endpoint/:path*',
+    '/((?!api|_next/static|_next/image|.*\\.png$).*)'
+  ],
 };

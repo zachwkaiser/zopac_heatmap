@@ -1,0 +1,11 @@
+I spent a solid 12 hours trying to get these things to scan in unison and they refuse.
+
+Data goes missing on EP2 and the log file is somehow protected and doesn't allow me to move/
+edit it on EP4. 
+
+I think the culprit is the .service file I made to start a scan at a designated UTC time, but 
+I need to look into it some more to be certain.
+
+I need to just nuke the whole timed start concept, or at least how I have it set up now. Next 
+steps should be to just use the server to try and sync them all up and start a scan at the 
+same time...... that honestly sounds worse

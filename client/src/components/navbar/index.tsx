@@ -16,7 +16,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, onNavClick, onLogout, activePag
         {routes.map((route) => (
           <li key={route.name} className="navbar-item">
             <button
-              className={`navbar-link ${activePage === route.name ? 'active' : ''}`}
+              className={`navbar-link ${activePage === route.name ? 'active' : ''} ${route.name === 'Heat map' ? 'heatmap-btn' : ''}`}
               onClick={() => onNavClick(route.name)}
             >
               {route.name}
@@ -24,7 +24,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, onNavClick, onLogout, activePag
           </li>
         ))}
         {onLogout && (
-          <li className="navbar-item">
+          <li className="navbar-item logout-item">
             <button className="navbar-link" onClick={onLogout}>
               Log Out
             </button>
