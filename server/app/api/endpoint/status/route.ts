@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import postgres from 'postgres';
 
+// ---- Auth helper ----------------------------------------------------------
+function isAuthorized(req: Request): boolean {
+  const auth = req.headers.get("authorization") || "";
+  const fromAuth = auth.startsWith("ApiKey ") ? auth.slice(7) : null;
+  const fromHeader = req.headers.get("x-api-key");
+  const token = fromAuth || fromHeader;
+
+  const serverKey = process.env.ENDPOINT_API_KEY || process.env.API_KEY;
+  return !!(token && serverKey && token === serverKey);
+}
+
 // POST: Update endpoint status (heartbeat)
 // GET: Retrieve all endpoint statuses
 export async function POST(request: NextRequest) {
+  // Check API key authorization
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { error: 'Unauthorized - Invalid or missing API key' },
+      { status: 401 }
+    );
+  }
+
   try {
     const sql = postgres({
       host: process.env.POSTGRES_HOST,
@@ -36,32 +55,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create endpoint_status table if it doesn't exist
-    await sql`
-      CREATE TABLE IF NOT EXISTS endpoint_status (
-        endpoint_id VARCHAR(50) PRIMARY KEY,
-        status VARCHAR(20) NOT NULL,
-        last_seen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        metadata JSONB,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `;
-
-    // Create index on last_seen for efficient queries
-    await sql`CREATE INDEX IF NOT EXISTS idx_endpoint_status_last_seen ON endpoint_status(last_seen);`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_endpoint_status_status ON endpoint_status(status);`;
-
+    // Use existing endpoint_status table (already created)
     // Upsert endpoint status
     const result = await sql`
-      INSERT INTO endpoint_status (endpoint_id, status, last_seen, metadata, updated_at)
-      VALUES (${endpoint_id}, ${status}, CURRENT_TIMESTAMP, ${metadata ? sql.json(metadata) : null}, CURRENT_TIMESTAMP)
+      INSERT INTO endpoint_status (endpoint_id, status, last_seen, metadata)
+      VALUES (${endpoint_id}, ${status}, CURRENT_TIMESTAMP, ${metadata ? sql.json(metadata) : null})
       ON CONFLICT (endpoint_id) 
       DO UPDATE SET 
         status = EXCLUDED.status,
         last_seen = CURRENT_TIMESTAMP,
-        metadata = EXCLUDED.metadata,
-        updated_at = CURRENT_TIMESTAMP
+        metadata = EXCLUDED.metadata
       RETURNING *;
     `;
 
@@ -75,7 +78,6 @@ export async function POST(request: NextRequest) {
         status: result[0].status,
         last_seen: result[0].last_seen,
         metadata: result[0].metadata,
-        updated_at: result[0].updated_at,
       }
     });
   } catch (error) {
