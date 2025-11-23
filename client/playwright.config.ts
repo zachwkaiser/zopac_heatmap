@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-/* global process, require */
+/* global process */
 
 /**
  * Read environment variables from file.
