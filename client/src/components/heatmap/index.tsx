@@ -3,6 +3,9 @@ import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import './style.css';
 import { getScanData } from './getData';
 
+// API base URL from environment variable, fallback to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // Heatmap.js type definitions
 interface HeatmapDataPoint {
   x: number;
@@ -63,7 +66,7 @@ function HeatMapPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState<string | null>(null);
   const [endpoints, setEndpoints] = useState<EndpointPosition[]>([]);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [_message, _setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
@@ -112,7 +115,7 @@ function HeatMapPage() {
 
     // Fetch data from API
     try {
-      const response = await fetch('http://localhost:3000/api/query/heatmap-data');
+      const response = await fetch(`${API_URL}/api/query/heatmap-data`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -142,7 +145,7 @@ function HeatMapPage() {
   useEffect(() => {
     const fetchEndpoints = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/query/endpoints');
+        const response = await fetch(`${API_URL}/api/query/endpoints`);
         const data = await response.json();
         if (data.success && data.positions) {
           setEndpoints(data.positions);
@@ -158,7 +161,7 @@ function HeatMapPage() {
   useEffect(() => {
     const fetchFloorplan = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/floorplan?floor=1');
+        const response = await fetch(`${API_URL}/api/floorplan?floor=1`);
         const data = await response.json();
         if (data.success && data.floorplan && data.floorplan.image_data) {
           setUploadedImage(data.floorplan.image_data);
@@ -214,7 +217,7 @@ function HeatMapPage() {
           
           try {
             // Upload to server
-            const response = await fetch('http://localhost:3000/api/floorplan', {
+            const response = await fetch(`${API_URL}/api/floorplan`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -233,17 +236,17 @@ function HeatMapPage() {
               // Set the uploaded image for display
               setUploadedImage(result);
               setFileType('image');
-              setMessage({ type: 'success', text: 'Floorplan uploaded successfully!' });
-              setTimeout(() => setMessage(null), 3000);
+              _setMessage({ type: 'success', text: 'Floorplan uploaded successfully!' });
+              setTimeout(() => _setMessage(null), 3000);
             } else {
               console.error('Failed to upload floorplan:', data.error);
-              setMessage({ type: 'error', text: 'Failed to upload floorplan to server.' });
-              setTimeout(() => setMessage(null), 3000);
+              _setMessage({ type: 'error', text: 'Failed to upload floorplan to server.' });
+              setTimeout(() => _setMessage(null), 3000);
             }
           } catch (error) {
             console.error('Error uploading floorplan:', error);
-            setMessage({ type: 'error', text: 'Error connecting to server.' });
-            setTimeout(() => setMessage(null), 3000);
+            _setMessage({ type: 'error', text: 'Error connecting to server.' });
+            setTimeout(() => _setMessage(null), 3000);
           }
         };
         reader.readAsDataURL(selectedFile);

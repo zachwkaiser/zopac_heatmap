@@ -126,7 +126,7 @@ test.describe('Heatmap Component', () => {
     await page.waitForFunction(() => 'h337' in window);
     
     // Verify heatmap.js is available
-    const hasHeatmapJS = await page.evaluate(() => typeof (window as any).h337 !== 'undefined');
+    const hasHeatmapJS = await page.evaluate(() => typeof (window as Window & { h337?: unknown }).h337 !== 'undefined');
     expect(hasHeatmapJS).toBeTruthy();
   });
 });

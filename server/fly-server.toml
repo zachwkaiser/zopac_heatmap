@@ -1,0 +1,30 @@
+# fly.toml app configuration file generated for flytest-server-whatever-inc on 2025-11-20T07:58:28-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'seng401-project-zopac'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  NODE_ENV="production"
+  POSTGRES_HOST="db"
+  POSTGRES_PORT="5432"
+  POSTGRES_DATABASE = 'appdb'
+  POSTGRES_URL = 'postgres://appuser:devpass@seng401-project-zopac-postgres.internal:5432/appdb'
+  POSTGRES_USER = 'appuser'
+  CLIENT_URL = "https://seng401-project-zopac-client.fly.dev"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'

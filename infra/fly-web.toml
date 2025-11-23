@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for seng401-project-zopac-client on 2025-11-22
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'seng401-project-zopac-client'
+primary_region = 'iad'
+
+[build]
+  # Points to the client Dockerfile
+  dockerfile = "../client/Dockerfile"
+
+[env]
+  # Update this with your actual deployed server URL
+  VITE_API_URL = "https://seng401-project-zopac.fly.dev"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'

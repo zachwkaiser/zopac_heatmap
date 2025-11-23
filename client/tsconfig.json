@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["node"],
     "allowJs": true,
     "checkJs": false,
     "jsx": "react-jsx",
@@ -14,5 +15,5 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true
   },
-  "include": ["src"]
+  "include": ["src", "playwright.config.ts", "tests"]
 }
