@@ -35,34 +35,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create floorplans table if it doesn't exist
-    await sql`
-      CREATE TABLE IF NOT EXISTS floorplans (
-        id SERIAL PRIMARY KEY,
-        floor INTEGER NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        width FLOAT,
-        height FLOAT,
-        image_data TEXT,
-        image_url TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(floor)
-      );
-    `;
-
+    // Use existing floorplans table (already created with floor_number column)
     // Upsert floorplan (insert or update if floor already exists)
     const result = await sql`
-      INSERT INTO floorplans (floor, name, width, height, image_data, image_url, updated_at)
-      VALUES (${floor}, ${name}, ${width || null}, ${height || null}, ${image_data || null}, ${image_url || null}, CURRENT_TIMESTAMP)
-      ON CONFLICT (floor) 
+      INSERT INTO floorplans (floor_number, building, width, height, image_data, image_url)
+      VALUES (${floor}, ${name}, ${width || null}, ${height || null}, ${image_data || null}, ${image_url || null})
+      ON CONFLICT (floor_number) 
       DO UPDATE SET 
-        name = EXCLUDED.name,
+        building = EXCLUDED.building,
         width = EXCLUDED.width,
         height = EXCLUDED.height,
         image_data = EXCLUDED.image_data,
-        image_url = EXCLUDED.image_url,
-        updated_at = CURRENT_TIMESTAMP
+        image_url = EXCLUDED.image_url
       RETURNING *;
     `;
 
@@ -72,9 +56,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Floorplan uploaded successfully',
       floorplan: {
-        id: result[0].id,
-        floor: result[0].floor,
-        name: result[0].name,
+        floor_number: result[0].floor_number,
+        building: result[0].building,
         width: result[0].width,
         height: result[0].height,
         has_image_data: !!result[0].image_data,
@@ -117,7 +100,7 @@ export async function GET(request: NextRequest) {
       // Get specific floor
       result = await sql`
         SELECT * FROM floorplans 
-        WHERE floor = ${parseInt(floor)}
+        WHERE floor_number = ${parseInt(floor)}
       `;
 
       if (result.length === 0) {
@@ -132,22 +115,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         floorplan: {
-          id: result[0].id,
-          floor: result[0].floor,
-          name: result[0].name,
+          floor_number: result[0].floor_number,
+          building: result[0].building,
           width: result[0].width,
           height: result[0].height,
           image_data: result[0].image_data,
           image_url: result[0].image_url,
           created_at: result[0].created_at,
-          updated_at: result[0].updated_at,
         }
       });
     } else {
       // Get all floorplans
       result = await sql`
         SELECT * FROM floorplans 
-        ORDER BY floor ASC
+        ORDER BY floor_number ASC
       `;
 
       await sql.end();
@@ -155,15 +136,13 @@ export async function GET(request: NextRequest) {
         success: true,
         count: result.length,
         floorplans: result.map(fp => ({
-          id: fp.id,
-          floor: fp.floor,
-          name: fp.name,
+          floor_number: fp.floor_number,
+          building: fp.building,
           width: fp.width,
           height: fp.height,
           has_image_data: !!fp.image_data,
           image_url: fp.image_url,
           created_at: fp.created_at,
-          updated_at: fp.updated_at,
         }))
       });
     }

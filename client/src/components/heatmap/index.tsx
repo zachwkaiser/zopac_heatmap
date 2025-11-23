@@ -3,6 +3,8 @@ import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react
 import './style.css';
 import { getScanData } from './getData';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // Heatmap.js type definitions
 interface HeatmapDataPoint {
   x: number;
@@ -112,7 +114,7 @@ function HeatMapPage() {
 
     // Fetch data from API
     try {
-      const response = await fetch('http://localhost:3000/api/query/heatmap-data');
+      const response = await fetch(`${API_URL}/api/query/heatmap-data`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -142,7 +144,7 @@ function HeatMapPage() {
   useEffect(() => {
     const fetchEndpoints = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/query/endpoints');
+        const response = await fetch(`${API_URL}/api/query/endpoints`);
         const data = await response.json();
         if (data.success && data.positions) {
           setEndpoints(data.positions);
@@ -158,7 +160,7 @@ function HeatMapPage() {
   useEffect(() => {
     const fetchFloorplan = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/floorplan?floor=1');
+        const response = await fetch(`${API_URL}/api/floorplan?floor=1`);
         const data = await response.json();
         if (data.success && data.floorplan && data.floorplan.image_data) {
           setUploadedImage(data.floorplan.image_data);
@@ -270,7 +272,7 @@ function HeatMapPage() {
           
           try {
             // Upload to server
-            const response = await fetch('http://localhost:3000/api/floorplan', {
+            const response = await fetch(`${API_URL}/api/floorplan`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

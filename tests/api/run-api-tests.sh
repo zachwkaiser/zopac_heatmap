@@ -53,14 +53,12 @@ log_test "TC-API-001: Endpoint can submit scan data"
 RESPONSE=$(curl -s -X POST "$API_BASE_URL/api/endpoint/scan-data" \
   -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{
-    "scans": [{
-      "endpoint_id": "TEST_EP1",
-      "mac": "aa:bb:cc:dd:ee:ff",
-      "rssi": -65,
-      "timestamp": "2025-11-17T12:00:00Z"
-    }]
-  }')
+  -d '[{
+    "endpoint_id": "TEST_EP1",
+    "mac": "aa:bb:cc:dd:ee:ff",
+    "rssi": -65,
+    "timestamp": "2025-11-17T12:00:00Z"
+  }]')
 
 if echo "$RESPONSE" | grep -q '"success":true'; then
     log_pass "TC-API-001: Scan data accepted"

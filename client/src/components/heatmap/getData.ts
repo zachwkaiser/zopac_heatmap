@@ -6,6 +6,8 @@
  */
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 
 interface DataResponse {
   success: boolean;
@@ -51,7 +53,7 @@ interface WifiScan {
 export async function getScanData(): Promise<WifiScan[]> {
     // Use the secure proxy route instead of calling the endpoint directly
     // The proxy route handles API key authentication server-side
-    const response = await getData('http://localhost:3000/api/client/scan-data');
+    const response = await getData(`${API_URL}/api/client/scan-data`);
 
     if (response.success) {
         const result = response.data as WifiScan[];
