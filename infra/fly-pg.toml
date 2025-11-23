@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'pgtest-whatever-inc'
+app = 'seng401-project-zopac-postgres'
 primary_region = 'iad'
 
 [build]
@@ -21,7 +21,8 @@ dockerfile = "Dockerfile-pg"
     port = 5432
 
 [env]
-  POSTGRES_USER = "admin"
+  POSTGRES_DB = "appdb"
+  POSTGRES_USER = "appuser"
 
 [[vm]]
   size = 'shared-cpu-1x'
