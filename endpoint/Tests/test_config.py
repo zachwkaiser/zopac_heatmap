@@ -65,7 +65,7 @@ def test_load_config_minimal_env(monkeypatch):
 # TC-CFG-002: load_config respects optional overrides for ints and log_level
 def test_load_config_respects_overrides(monkeypatch):
     _set_min_env(monkeypatch)
-    monkeypatch.setenv("LOG_LEVEL", "debug")          # lower-case, should upper-case
+    monkeypatch.setenv("LOG_LEVEL", "debug")  # lower-case, should upper-case
     monkeypatch.setenv("UPDATE_CHANNEL", "beta")
     monkeypatch.setenv("HEARTBEAT_SEC", "45")
     monkeypatch.setenv("BATCH_MAX", "500")
@@ -81,7 +81,9 @@ def test_load_config_respects_overrides(monkeypatch):
 
 
 # TC-CFG-003: load_config fails when required env var is missing
-@pytest.mark.parametrize("missing_var", ["ENDPOINT_ID", "WLAN_IFACE", "SERVER_URL", "API_KEY"])
+@pytest.mark.parametrize(
+    "missing_var", ["ENDPOINT_ID", "WLAN_IFACE", "SERVER_URL", "API_KEY"]
+)
 def test_load_config_missing_required(monkeypatch, missing_var):
     _set_min_env(monkeypatch)
     monkeypatch.delenv(missing_var, raising=False)

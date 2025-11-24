@@ -77,7 +77,8 @@ class MacAggregator:
         to_emit = [
             mac
             for mac, st in self._state.items()
-            if st["first_ts"] is not None and (now - float(st["first_ts"])) >= self.window_s
+            if st["first_ts"] is not None
+            and (now - float(st["first_ts"])) >= self.window_s
         ]
         for mac in to_emit:
             self._emit(mac)
@@ -99,8 +100,8 @@ class MacAggregator:
         ts_list, rssi_list, ch_list = zip(*samples)
         aggregated = {
             "mac": mac,
-            "first_seen": float(st["first_ts"]),         # window start (capture ts)
-            "last_seen": float(st["last_ts"]),           # window end   (capture ts)
+            "first_seen": float(st["first_ts"]),  # window start (capture ts)
+            "last_seen": float(st["last_ts"]),  # window end   (capture ts)
             "sample_count": len(rssi_list),
             "median_rssi": float(median(rssi_list)),
             "avg_rssi": float(mean(rssi_list)),

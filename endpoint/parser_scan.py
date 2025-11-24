@@ -62,14 +62,29 @@ def main():
     parser = argparse.ArgumentParser(
         description="Parse tcpdump output to JSONL with per-MAC aggregation (median RSSI)."
     )
-    parser.add_argument("--from", dest="source", default=None,
-                        help="Read input from file (default: stdin)")
-    parser.add_argument("--out", dest="out_path", default="-",
-                        help="Write output JSONL to file (default: stdout)")
-    parser.add_argument("--agg-window", type=float, default=2.0,
-                        help="Aggregation window in seconds (default: 2.0)")
-    parser.add_argument("--emit-raw", action="store_true",
-                        help="Also emit raw per-packet records (debug)")
+    parser.add_argument(
+        "--from",
+        dest="source",
+        default=None,
+        help="Read input from file (default: stdin)",
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        default="-",
+        help="Write output JSONL to file (default: stdout)",
+    )
+    parser.add_argument(
+        "--agg-window",
+        type=float,
+        default=2.0,
+        help="Aggregation window in seconds (default: 2.0)",
+    )
+    parser.add_argument(
+        "--emit-raw",
+        action="store_true",
+        help="Also emit raw per-packet records (debug)",
+    )
     args = parser.parse_args()
 
     # Open output
