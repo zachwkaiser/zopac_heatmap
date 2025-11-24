@@ -9,6 +9,7 @@ interface ScanData {
   endpoint_id: string;
   x: number;
   y: number;
+  z?: number;
 }
 
 // GET /api/query/heatmap-data
@@ -38,7 +39,8 @@ export async function GET(request: NextRequest) {
           ws.timestamp,
           ws.endpoint_id,
           ep.x,
-          ep.y
+          ep.y,
+          ep.z
         FROM wifi_scans ws
         LEFT JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
         WHERE ws.mac = ${mac} AND ep.is_active = true
@@ -53,7 +55,8 @@ export async function GET(request: NextRequest) {
           ws.timestamp,
           ws.endpoint_id,
           ep.x,
-          ep.y
+          ep.y,
+          ep.z
         FROM wifi_scans ws
         LEFT JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
         WHERE ep.is_active = true
@@ -82,7 +85,7 @@ export async function GET(request: NextRequest) {
           endpoint_id: scan.endpoint_id,
           rssi: scan.rssi,
           distance: rssiToDistance(scan.rssi),
-          position: { x: scan.x, y: scan.y }
+          position: { x: scan.x, y: scan.y, z: scan.z || 0 }
         }));
 
       // Need at least 3 endpoints for trilateration

@@ -34,6 +34,7 @@ async function calculateLocation(
       ws.timestamp,
       ep.x,
       ep.y,
+      ep.z,
       ep.floor
     FROM wifi_scans ws
     JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
@@ -71,7 +72,8 @@ async function calculateLocation(
     distance: rssiToDistance(scan.rssi),
     position: {
       x: scan.x,
-      y: scan.y
+      y: scan.y,
+      z: scan.z || 0
     }
   }));
 

@@ -16,7 +16,7 @@ export async function GET() {
     });
 
     const positions = await sql`
-      SELECT endpoint_id, x, y, is_active, created_at, updated_at
+      SELECT endpoint_id, x, y, z, is_active, created_at, updated_at
       FROM endpoint_positions
       ORDER BY endpoint_id;
     `;
@@ -60,6 +60,9 @@ export async function POST(request: Request) {
       if (pos.y === undefined || typeof pos.y !== 'number') {
         errors.push(`Position ${index}: y coordinate is required and must be a number`);
       }
+      if (pos.z !== undefined && typeof pos.z !== 'number') {
+        errors.push(`Position ${index}: z coordinate must be a number`);
+      }
       if (pos.floor !== undefined && typeof pos.floor !== 'number') {
         errors.push(`Position ${index}: floor must be a number`);
       }
@@ -89,11 +92,12 @@ export async function POST(request: Request) {
     const results = await Promise.all(
       positions.map(async (pos) => {
         const result = await sql`
-          INSERT INTO endpoint_positions (endpoint_id, x, y, floor, description, updated_at)
+          INSERT INTO endpoint_positions (endpoint_id, x, y, z, floor, description, updated_at)
           VALUES (
             ${pos.endpoint_id},
             ${pos.x},
             ${pos.y},
+            ${pos.z || 0},
             ${pos.floor || 1},
             ${pos.description || null},
             CURRENT_TIMESTAMP
@@ -102,6 +106,7 @@ export async function POST(request: Request) {
           DO UPDATE SET
             x = EXCLUDED.x,
             y = EXCLUDED.y,
+            z = EXCLUDED.z,
             floor = EXCLUDED.floor,
             description = EXCLUDED.description,
             updated_at = CURRENT_TIMESTAMP
