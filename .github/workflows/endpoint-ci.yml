@@ -9,20 +9,28 @@ on:
       - 'endpoint/**'
 
 jobs:
-  lint-and-format:
+  lint-test:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: endpoint
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install black
+          # Formatter + test runner + libs used by endpoint code
+          python -m pip install black pytest requests python-dotenv
+
       - name: Check Black formatting
-        run: black --check .
+        run: python -m black . --check
+
+      - name: Run endpoint tests (pytest)
+        run: python -m pytest

@@ -127,8 +127,8 @@ export async function POST(request: Request) {
         validScans.map(scan =>
           sql`
             INSERT INTO wifi_scans (endpoint_id, mac, rssi, timestamp)
-            VALUES (${scan.endpoint_id}, ${scan.mac}, ${scan.rssi}, ${scan.timestamp})
-            RETURNING id, endpoint_id, mac, rssi, timestamp
+            VALUES (${scan.endpoint_id}, ${scan.mac}, ${scan.rssi}, ${new Date()})
+            RETURNING id, endpoint_id, mac, rssi, timestamp, created_at
           `
         )
       );
