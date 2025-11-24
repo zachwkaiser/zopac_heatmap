@@ -19,6 +19,7 @@ export async function GET() {
         endpoint_id,
         x,
         y,
+        z,
         is_active,
         created_at,
         updated_at

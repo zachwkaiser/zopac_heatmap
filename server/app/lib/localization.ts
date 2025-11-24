@@ -3,6 +3,7 @@
 export interface Position {
   x: number;
   y: number;
+  z?: number;
 }
 
 export interface EndpointPosition extends Position {
@@ -49,7 +50,7 @@ export function rssiToDistance(
  * Closer endpoints (stronger signals) have exponentially more influence
  * 
  * @param scans - Array of scans with endpoint positions and distances
- * @returns Estimated position {x, y} or null if insufficient data
+ * @returns Estimated position {x, y, z} or null if insufficient data
  */
 export function trilaterate(scans: ScanWithDistance[]): Position | null {
   if (scans.length < 3) {
@@ -61,6 +62,7 @@ export function trilaterate(scans: ScanWithDistance[]): Position | null {
   let totalWeight = 0;
   let weightedX = 0;
   let weightedY = 0;
+  let weightedZ = 0;
 
   for (const scan of scans) {
     // Weight = 1 / distance^2 (inverse square law)
@@ -69,12 +71,14 @@ export function trilaterate(scans: ScanWithDistance[]): Position | null {
     
     weightedX += scan.position.x * weight;
     weightedY += scan.position.y * weight;
+    weightedZ += (scan.position.z || 0) * weight;
     totalWeight += weight;
   }
 
   return {
     x: weightedX / totalWeight,
-    y: weightedY / totalWeight
+    y: weightedY / totalWeight,
+    z: weightedZ / totalWeight
   };
 }
 
@@ -160,6 +164,7 @@ function calculateCentroid(scans: ScanWithDistance[], weights?: number[]): Posit
   let totalWeight = 0;
   let weightedX = 0;
   let weightedY = 0;
+  let weightedZ = 0;
 
   for (let i = 0; i < scans.length; i++) {
     const scan = scans[i];
@@ -168,12 +173,14 @@ function calculateCentroid(scans: ScanWithDistance[], weights?: number[]): Posit
     
     weightedX += scan.position.x * weight;
     weightedY += scan.position.y * weight;
+    weightedZ += (scan.position.z || 0) * weight;
     totalWeight += weight;
   }
 
   return {
     x: weightedX / totalWeight,
-    y: weightedY / totalWeight
+    y: weightedY / totalWeight,
+    z: weightedZ / totalWeight
   };
 }
 
@@ -210,19 +217,21 @@ export function filterScans(
  */
 export function averagePositions(positions: Position[]): Position {
   if (positions.length === 0) {
-    return { x: 0, y: 0 };
+    return { x: 0, y: 0, z: 0 };
   }
 
   const sum = positions.reduce(
     (acc, pos) => ({
       x: acc.x + pos.x,
-      y: acc.y + pos.y
+      y: acc.y + pos.y,
+      z: acc.z + (pos.z || 0)
     }),
-    { x: 0, y: 0 }
+    { x: 0, y: 0, z: 0 }
   );
 
   return {
     x: sum.x / positions.length,
-    y: sum.y / positions.length
+    y: sum.y / positions.length,
+    z: sum.z / positions.length
   };
 }

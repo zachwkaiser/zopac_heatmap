@@ -56,6 +56,7 @@ export async function GET(request: Request) {
         ws.timestamp,
         ep.x,
         ep.y,
+        ep.z,
         ep.floor
       FROM wifi_scans ws
       JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
@@ -191,6 +192,7 @@ export async function POST(request: Request) {
         ws.timestamp,
         ep.x,
         ep.y,
+        ep.z,
         ep.floor
       FROM wifi_scans ws
       JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
@@ -238,7 +240,7 @@ export async function POST(request: Request) {
         endpoint_id: scan.endpoint_id,
         rssi: scan.rssi,
         distance: rssiToDistance(scan.rssi),
-        position: { x: scan.x, y: scan.y }
+        position: { x: scan.x, y: scan.y, z: scan.z || 0 }
       }));
 
       const position = trilaterate(scansWithDistance);
