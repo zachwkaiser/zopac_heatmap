@@ -67,6 +67,8 @@ function HeatMapPage() {
   const [fileType, setFileType] = useState<string | null>(null);
   const [endpoints, setEndpoints] = useState<EndpointPosition[]>([]);
   const [_message, _setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [draggingEndpoint, setDraggingEndpoint] = useState<string | null>(null);
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
@@ -208,6 +210,64 @@ function HeatMapPage() {
     }
   };
 
+  // Handle endpoint drag start
+  const handleEndpointMouseDown = (endpointId: string, e: React.MouseEvent) => {
+    if (!editMode) return;
+    e.preventDefault();
+    setDraggingEndpoint(endpointId);
+  };
+
+  // Handle endpoint dragging
+  const handleContainerMouseMove = (e: React.MouseEvent) => {
+    if (!draggingEndpoint || !heatmapContainerRef.current) return;
+    
+    const rect = heatmapContainerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    setEndpoints(prev => 
+      prev.map(ep => 
+        ep.endpoint_id === draggingEndpoint 
+          ? { ...ep, x: Math.max(0, Math.min(rect.width, x)), y: Math.max(0, Math.min(rect.height, y)) }
+          : ep
+      )
+    );
+  };
+
+  // Handle endpoint drag end
+  const handleContainerMouseUp = async () => {
+    if (!draggingEndpoint) return;
+
+    const endpoint = endpoints.find(ep => ep.endpoint_id === draggingEndpoint);
+    if (endpoint) {
+      try {
+        // Update endpoint position on server
+        const response = await fetch(`${API_URL}/api/endpoint/positions`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            endpoint_id: endpoint.endpoint_id,
+            x: Math.round(endpoint.x),
+            y: Math.round(endpoint.y),
+          }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          console.log('Endpoint position updated:', endpoint.endpoint_id);
+        } else {
+          console.error('Failed to update endpoint position:', data.error);
+        }
+      } catch (error) {
+        console.error('Error updating endpoint position:', error);
+      }
+    }
+
+    setDraggingEndpoint(null);
+  };
+
   // Handle upload button click - upload the image to server
   const handleUploadClick = async () => {
     if (selectedFile) {
@@ -285,6 +345,16 @@ function HeatMapPage() {
           <div className='top-content'>
             <div className='button-container'>
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
+              <Button 
+                className={editMode ? 'info-button active' : 'info-button'} 
+                onClick={() => setEditMode(!editMode)}
+                style={{
+                  backgroundColor: editMode ? '#28a745' : undefined,
+                  borderColor: editMode ? '#28a745' : undefined
+                }}
+              >
+                {editMode ? '✓ Edit Mode' : 'Edit Endpoints'}
+              </Button>
               <Modal show={showMapUpload} onHide={handleCloseModal} centered className='modal-map-upload'>
                 <Modal.Header closeButton className='modal-map-upload-header'>
                   <Modal.Title className='modal-map-upload-title'>Upload Map</Modal.Title>
@@ -395,29 +465,56 @@ function HeatMapPage() {
               }}
             />
           )}
-          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}>
+          <div 
+            ref={heatmapContainerRef} 
+            style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}
+            onMouseMove={handleContainerMouseMove}
+            onMouseUp={handleContainerMouseUp}
+            onMouseLeave={handleContainerMouseUp}
+          >
             {/* Render endpoint markers */}
             {endpoints.map((endpoint) => (
               <div
                 key={endpoint.endpoint_id}
+                onMouseDown={(e) => handleEndpointMouseDown(endpoint.endpoint_id, e)}
                 style={{
                   position: 'absolute',
                   left: `${endpoint.x}px`,
                   top: `${endpoint.y}px`,
-                  width: '12px',
-                  height: '12px',
+                  width: editMode ? '20px' : '12px',
+                  height: editMode ? '20px' : '12px',
                   borderRadius: '50%',
-                  backgroundColor: 'black',
+                  backgroundColor: editMode && draggingEndpoint === endpoint.endpoint_id ? '#666' : 'black',
                   border: `2px solid ${endpoint.is_active ? '#00ff00' : '#ff0000'}`,
                   transform: 'translate(-50%, -50%)',
                   zIndex: 10,
                   boxShadow: endpoint.is_active 
                     ? '0 0 8px 2px rgba(0,255,0,0.8), 0 0 12px 4px rgba(0,255,0,0.4)'
                     : '0 0 8px 2px rgba(255,0,0,0.8), 0 0 12px 4px rgba(255,0,0,0.4)',
-                  pointerEvents: 'none'
+                  pointerEvents: editMode ? 'auto' : 'none',
+                  cursor: editMode ? 'move' : 'default',
+                  transition: editMode ? 'none' : 'all 0.2s ease'
                 }}
-                title={`${endpoint.endpoint_id} - ${endpoint.is_active ? 'Active' : 'Inactive'}`}
-              />
+                title={`${endpoint.endpoint_id} - ${endpoint.is_active ? 'Active' : 'Inactive'}${editMode ? ' (Drag to move)' : ''}`}
+              >
+                {editMode && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-25px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'rgba(0,0,0,0.8)',
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '3px',
+                    fontSize: '10px',
+                    whiteSpace: 'nowrap',
+                    pointerEvents: 'none'
+                  }}>
+                    {endpoint.endpoint_id}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </Col>
