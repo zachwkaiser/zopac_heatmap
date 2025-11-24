@@ -235,3 +235,4 @@ export function averagePositions(positions: Position[]): Position {
     z: (sum.z ?? 0) / positions.length
   };
 }
+

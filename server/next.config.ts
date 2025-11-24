@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   },
   // Enable standalone output for Docker
   output: 'standalone',
+  // Increase body size limit for large scan data batches
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb',
+    },
+  },
   // CORS headers for client integration
   async headers() {
     return [
