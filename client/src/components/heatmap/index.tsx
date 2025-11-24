@@ -191,6 +191,12 @@ function HeatMapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
+  // Handle modal close - reset selected file
+  const handleCloseModal = () => {
+    setShowMapUpload(false);
+    setSelectedFile(null);
+  };
+
   // Handle file selection (store file but don't process yet)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
@@ -267,8 +273,8 @@ function HeatMapPage() {
         alert('Unsupported file type. Please upload JPG or PDF files.');
       }
       
-      // Close modal after upload
-      setShowMapUpload(false);
+      // Close modal and reset selected file after upload
+      handleCloseModal();
     }
   };
 
@@ -279,7 +285,7 @@ function HeatMapPage() {
           <div className='top-content'>
             <div className='button-container'>
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
-              <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered className='modal-map-upload'>
+              <Modal show={showMapUpload} onHide={handleCloseModal} centered className='modal-map-upload'>
                 <Modal.Header closeButton className='modal-map-upload-header'>
                   <Modal.Title className='modal-map-upload-title'>Upload Map</Modal.Title>
                 </Modal.Header>
@@ -301,10 +307,11 @@ function HeatMapPage() {
                       className="upload-btn"
                       onClick={handleUploadClick}
                       disabled={!selectedFile}
+                      title={!selectedFile ? "Please select a file first" : "Upload the selected map"}
                     >
                       Upload Map
                     </Button>
-                    <Button variant="secondary" className="cancel-btn" onClick={() => setShowMapUpload(false)}>
+                    <Button variant="secondary" className="cancel-btn" onClick={handleCloseModal}>
                       Cancel
                     </Button>
                   </div>
