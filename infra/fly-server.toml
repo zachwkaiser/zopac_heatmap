@@ -1,0 +1,27 @@
+# fly.toml app configuration file generated for flytest-server-whatever-inc on 2025-11-20T07:58:28-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'flytest-server-whatever-inc'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'Dockerfile-server'
+
+[env]
+  POSTGRES_DB = 'postgres'
+  POSTGRES_HOST = 'pgtest-whatever-inc.internal'
+  POSTGRES_PORT = '5432'
+  POSTGRES_USER = 'admin'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'

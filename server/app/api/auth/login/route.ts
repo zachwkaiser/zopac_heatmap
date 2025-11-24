@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import postgres from 'postgres';
 import bcrypt from 'bcrypt';
 
-const sql = postgres(process.env.POSTGRES_URL!);
-
 // Handle CORS preflight
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -18,6 +16,15 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
+    const sql = postgres({
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      database: process.env.POSTGRES_DATABASE,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: false,
+    });
+
     const body = await request.json();
     const { email, password } = body;
 
@@ -69,6 +76,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Return success with user info (excluding password)
+    await sql.end();
+
     return NextResponse.json(
       {
         message: 'Login successful',

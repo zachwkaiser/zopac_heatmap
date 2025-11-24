@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Button, Form, Dropdown, Alert, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import './style.css';
 import { getScanData } from './getData';
+
+// API base URL from environment variable, fallback to localhost for development
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Heatmap.js type definitions
 interface HeatmapDataPoint {
@@ -45,18 +48,27 @@ declare global {
   }
 }
 
+interface EndpointPosition {
+  endpoint_id: string;
+  x: number;
+  y: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 function HeatMapPage() {
-  const [serverIP, setServerIP] = useState('');
-  const [previousEntries, setPreviousEntries] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const [showMapUpload, setShowMapUpload] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(() => {
+    // Load saved image from localStorage on initial render
+    return localStorage.getItem('heatmap_background_image');
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [fileType, setFileType] = useState<string | null>(null);
+  const [endpoints, setEndpoints] = useState<EndpointPosition[]>([]);
+  const [_message, _setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const heatmapContainerRef = useRef<HTMLDivElement>(null);
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
-
 
 
   // Function to initialize and display heatmap with hardcoded example data
@@ -77,8 +89,8 @@ function HeatMapPage() {
     }
   };
 
-  // Function to create heatmap instance with hardcoded example data
-  const createHeatmapInstance = () => {
+  // Function to create heatmap instance and fetch data from API
+  const createHeatmapInstance = async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
     // Create heatmap configuration
@@ -101,32 +113,25 @@ function HeatMapPage() {
     const heatmapInstance = window.h337.create(config);
     heatmapInstanceRef.current = heatmapInstance;
 
-    // Hardcoded example data points (will be replaced with API data later)
-    const exampleData = {
+    // Fetch data from API
+    try {
+      const response = await fetch(`${API_URL}/api/query/heatmap-data`);
+      const result = await response.json();
       
-      max: 100,
-      min: 0,
-      data: [
-        { x: 100, y: 100, value: 90 },
-        { x: 200, y: 150, value: 75 },
-        { x: 300, y: 200, value: 60 },
-        { x: 400, y: 100, value: 85 },
-        { x: 500, y: 250, value: 70 },
-        { x: 600, y: 300, value: 95 },
-        { x: 300, y: 350, value: 50 },
-        { x: 150, y: 200, value: 80 },
-        { x: 250, y: 300, value: 65 },
-        { x: 450, y: 350, value: 75 },
-        { x: 550, y: 180, value: 90 },
-        { x: 180, y: 280, value: 55 },
-        { x: 650, y: 400, value: 70 },
-        { x: 700, y: 180, value: 85 },
-        { x: 380, y: 380, value: 60 }
-      ]
-    };
-
-    // Set the data to display the heatmap
-    heatmapInstance.setData(exampleData);
+      if (result.success && result.data) {
+        // Set the data from API to display the heatmap
+        heatmapInstance.setData(result.data);
+        console.log('Heatmap data loaded from database:', result.count, 'points');
+      } else {
+        console.error('Failed to load heatmap data:', result.error);
+        // Fallback to empty data
+        heatmapInstance.setData({ max: 100, min: 0, data: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching heatmap data:', error);
+      // Fallback to empty data
+      heatmapInstance.setData({ max: 100, min: 0, data: [] });
+    }
   };
 
   useEffect(() => {
@@ -135,6 +140,41 @@ function HeatMapPage() {
       console.log(data);
     });
   }, []);
+
+  // Fetch endpoint positions on component mount
+  useEffect(() => {
+    const fetchEndpoints = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/query/endpoints`);
+        const data = await response.json();
+        if (data.success && data.positions) {
+          setEndpoints(data.positions);
+        }
+      } catch (error) {
+        console.error('Error fetching endpoint positions:', error);
+      }
+    };
+    fetchEndpoints();
+  }, []);
+
+  // Fetch floorplan from server on component mount
+  useEffect(() => {
+    const fetchFloorplan = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/floorplan?floor=1`);
+        const data = await response.json();
+        if (data.success && data.floorplan && data.floorplan.image_data) {
+          setUploadedImage(data.floorplan.image_data);
+          setFileType('image');
+          console.log('Floorplan loaded from server');
+        }
+      } catch (error) {
+        console.error('Error fetching floorplan:', error);
+      }
+    };
+    fetchFloorplan();
+  }, []);
+
   // Initialize heatmap only after image is uploaded
   useEffect(() => {
     if (uploadedImage) {
@@ -151,60 +191,6 @@ function HeatMapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
-  // API function to send data to Postman mock endpoint
-  const sendToAPI = async (ip: string) => {
-    try {
-      setIsLoading(true);
-      setMessage(null);
-      
-      const response = await fetch('https://d9bbb8ed-6446-4926-a327-b313008215e9.mock.pstmn.io/test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ serverIP: ip }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response:', data);
-        
-        // Only add to previous entries on successful API response
-        setPreviousEntries(prev => {
-          if (!prev.includes(ip)) {
-            return [...prev, ip];
-          }
-          return prev;
-        });
-        
-        setMessage({ type: 'success', text: `Server IP "${ip}" sent to API successfully!` });
-      } else {
-        console.error('API Error:', response.status, response.statusText);
-        setMessage({ type: 'error', text: `API Error: ${response.status} ${response.statusText}` });
-      }
-    } catch (error) {
-      console.error('Error sending data to API:', error);
-      setMessage({ type: 'error', text: 'Failed to connect to server.' });
-    } finally {
-      setIsLoading(false);
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(null), 3000);
-    }
-  };
-
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (serverIP.trim()) {
-      sendToAPI(serverIP.trim());
-    }
-  };
-
-  // Handle dropdown selection
-  const handleDropdownSelect = (selectedIP: string) => {
-    setServerIP(selectedIP);
-  };
-
   // Handle file selection (store file but don't process yet)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const target = e.target as HTMLInputElement;
@@ -213,13 +199,11 @@ function HeatMapPage() {
     if (file) {
       console.log('Selected file:', file.name, 'Type:', file.type);
       setSelectedFile(file);
-      // Clear any previous error messages
-      setMessage(null);
     }
   };
 
-  // Handle upload button click - process the selected file
-  const handleUploadClick = () => {
+  // Handle upload button click - upload the image to server
+  const handleUploadClick = async () => {
     if (selectedFile) {
       // Reset previous uploads
       setUploadedImage(null);
@@ -228,10 +212,42 @@ function HeatMapPage() {
       // Check if it's an image file
       if (selectedFile.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const result = event.target?.result as string;
-          setUploadedImage(result);
-          setFileType('image');
+          
+          try {
+            // Upload to server
+            const response = await fetch(`${API_URL}/api/floorplan`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                floor: 1,
+                name: selectedFile.name,
+                image_data: result,
+              }),
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+              console.log('Floorplan uploaded to server:', data.floorplan);
+              // Set the uploaded image for display
+              setUploadedImage(result);
+              setFileType('image');
+              _setMessage({ type: 'success', text: 'Floorplan uploaded successfully!' });
+              setTimeout(() => _setMessage(null), 3000);
+            } else {
+              console.error('Failed to upload floorplan:', data.error);
+              _setMessage({ type: 'error', text: 'Failed to upload floorplan to server.' });
+              setTimeout(() => _setMessage(null), 3000);
+            }
+          } catch (error) {
+            console.error('Error uploading floorplan:', error);
+            _setMessage({ type: 'error', text: 'Error connecting to server.' });
+            setTimeout(() => _setMessage(null), 3000);
+          }
         };
         reader.readAsDataURL(selectedFile);
       } else if (selectedFile.type === 'application/pdf') {
@@ -241,12 +257,14 @@ function HeatMapPage() {
           const result = event.target?.result as string;
           setUploadedImage(result);
           setFileType('pdf');
+          // Save to localStorage for persistence across page refreshes
+          localStorage.setItem('heatmap_background_image', result);
+          localStorage.setItem('heatmap_file_type', 'pdf');
         };
         reader.readAsDataURL(selectedFile);
       } else {
         console.log('Unsupported file type:', selectedFile.type);
-        setMessage({ type: 'error', text: 'Unsupported file type. Please upload JPG or PDF files.' });
-        setTimeout(() => setMessage(null), 3000);
+        alert('Unsupported file type. Please upload JPG or PDF files.');
       }
       
       // Close modal after upload
@@ -262,7 +280,7 @@ function HeatMapPage() {
             <div className='button-container'>
               <Button className='info-button' onClick={() => setShowMapUpload(true)}>Change Map</Button>
               <Modal show={showMapUpload} onHide={() => setShowMapUpload(false)} centered className='modal-map-upload'>
-                <Modal.Header className='modal-map-upload-header'>
+                <Modal.Header closeButton className='modal-map-upload-header'>
                   <Modal.Title className='modal-map-upload-title'>Upload Map</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className='modal-map-upload-body'>
@@ -295,57 +313,24 @@ function HeatMapPage() {
 
             </div>
             <Row className='endpoint-info'>
-              <p>Endpoint info goes here</p>
+              <h5>Endpoint Information</h5>
+              {endpoints.length === 0 ? (
+                <p>No endpoints configured</p>
+              ) : (
+                <div className="endpoint-list">
+                  {endpoints.map((endpoint) => (
+                    <div key={endpoint.endpoint_id} className="endpoint-item">
+                      <strong>{endpoint.endpoint_id}</strong>: 
+                      Position ({endpoint.x}, {endpoint.y}) - 
+                      <span className={endpoint.is_active ? 'status-active' : 'status-inactive'}>
+                        {endpoint.is_active ? ' ✓ Active' : ' ✗ Inactive'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Row>
           </div>
-          <Row className='server-ip'>
-            <Form onSubmit={handleSubmit}>
-              {message && (
-                <Alert variant={message.type === 'success' ? 'success' : 'danger'} className="mb-3">
-                  {message.text}
-                </Alert>
-              )}
-              <Form.Group className="mb-3">
-                <Form.Label>Server IP</Form.Label>
-                <div className="input-group">
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter Server IP"
-                    value={serverIP}
-                    onChange={(e) => setServerIP(e.target.value)}
-                    required
-                  />
-                  <Dropdown>
-                    <Dropdown.Toggle variant="outline-secondary" id="dropdown-basic">
-                      Saved Server IP's
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      {previousEntries.length > 0 ? (
-                        previousEntries.map((entry, index) => (
-                          <Dropdown.Item 
-                            key={index} 
-                            onClick={() => handleDropdownSelect(entry)}
-                          >
-                            {entry}
-                          </Dropdown.Item>
-                        ))
-                      ) : (
-                        <Dropdown.Item className='disabled' disabled>No previous entries</Dropdown.Item>
-                      )}
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </div>
-              </Form.Group>
-              <Button 
-                type="submit" 
-                variant="primary" 
-                disabled={isLoading}
-                className="w-100"
-              >
-                {isLoading ? 'Sending...' : 'Set Server IP'}
-              </Button>
-            </Form>
-          </Row>
         </Col>
         <Col className='heatmap-container' lg={9}>
           {!uploadedImage && (
@@ -403,7 +388,31 @@ function HeatMapPage() {
               }}
             />
           )}
-          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}></div>
+          <div ref={heatmapContainerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 2 }}>
+            {/* Render endpoint markers */}
+            {endpoints.map((endpoint) => (
+              <div
+                key={endpoint.endpoint_id}
+                style={{
+                  position: 'absolute',
+                  left: `${endpoint.x}px`,
+                  top: `${endpoint.y}px`,
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  backgroundColor: 'black',
+                  border: `2px solid ${endpoint.is_active ? '#00ff00' : '#ff0000'}`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 10,
+                  boxShadow: endpoint.is_active 
+                    ? '0 0 8px 2px rgba(0,255,0,0.8), 0 0 12px 4px rgba(0,255,0,0.4)'
+                    : '0 0 8px 2px rgba(255,0,0,0.8), 0 0 12px 4px rgba(255,0,0,0.4)',
+                  pointerEvents: 'none'
+                }}
+                title={`${endpoint.endpoint_id} - ${endpoint.is_active ? 'Active' : 'Inactive'}`}
+              />
+            ))}
+          </div>
         </Col>
       </Row>
     </Container>
@@ -411,3 +420,4 @@ function HeatMapPage() {
 }
 
 export default HeatMapPage;
+
