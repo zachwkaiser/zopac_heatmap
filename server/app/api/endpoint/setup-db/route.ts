@@ -37,6 +37,7 @@ export async function POST() {
         endpoint_id VARCHAR(50) PRIMARY KEY,
         x FLOAT NOT NULL,
         y FLOAT NOT NULL,
+        z FLOAT DEFAULT 0,
         floor INTEGER DEFAULT 1,
         description TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
