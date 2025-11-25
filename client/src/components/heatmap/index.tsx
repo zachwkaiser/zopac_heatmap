@@ -241,8 +241,8 @@ function HeatMapPage() {
     const endpoint = endpoints.find(ep => ep.endpoint_id === draggingEndpoint);
     if (endpoint) {
       try {
-        // Update endpoint position on server
-        const response = await fetch(`${API_URL}/api/endpoint/positions`, {
+        // Update endpoint position on server using client proxy
+        const response = await fetch(`${API_URL}/api/client/positions`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
