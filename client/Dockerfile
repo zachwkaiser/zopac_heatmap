@@ -12,8 +12,8 @@ RUN npm ci
 COPY . .
 
 # Build argument for API URL
-ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL}
+ARG VITE_API_URL=https://seng401-project-zopac.fly.dev
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
 RUN npm run build

@@ -139,6 +139,87 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+
+    if (!body.endpoint_id || typeof body.endpoint_id !== 'string') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'endpoint_id is required and must be a string'
+        },
+        { status: 400 }
+      );
+    }
+    if (body.x === undefined || typeof body.x !== 'number') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'x coordinate is required and must be a number'
+        },
+        { status: 400 }
+      );
+    }
+    if (body.y === undefined || typeof body.y !== 'number') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'y coordinate is required and must be a number'
+        },
+        { status: 400 }
+      );
+    }
+
+    const sql = postgres({
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      database: process.env.POSTGRES_DATABASE,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: false,
+    });
+
+    const result = await sql`
+      UPDATE endpoint_positions
+      SET 
+        x = ${body.x},
+        y = ${body.y},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE endpoint_id = ${body.endpoint_id}
+      RETURNING *;
+    `;
+
+    await sql.end();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Endpoint position not found'
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Updated endpoint position for ${body.endpoint_id}`,
+      data: result[0]
+    });
+  } catch (error) {
+    console.error('Error updating endpoint position:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to update endpoint position',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
