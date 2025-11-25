@@ -86,9 +86,14 @@ test.describe('Heatmap Component', () => {
     await expect(changeMapButton).toBeVisible();
     await changeMapButton.click();
     
-    // Wait for modal to appear (increased timeout for slower browsers)
-    const modalTitle = page.getByText('Upload Map');
-    await expect(modalTitle).toBeVisible({ timeout: 10000 });
+    // Wait for modal to appear - use more specific selector for modal dialog
+    const modal = page.locator('.modal-map-upload');
+    await expect(modal).toBeVisible({ timeout: 10000 });
+    
+    // Check if modal title is visible
+    const modalTitle = page.locator('.modal-map-upload-title');
+    await expect(modalTitle).toBeVisible();
+    await expect(modalTitle).toHaveText('Upload Map');
     
     // Check if file input is present
     const fileInput = page.locator('input[type="file"]');
@@ -101,16 +106,16 @@ test.describe('Heatmap Component', () => {
     await changeMapButton.click();
     
     // Wait for modal to appear
-    const modalTitle = page.getByText('Upload Map');
-    await expect(modalTitle).toBeVisible({ timeout: 10000 });
+    const modal = page.locator('.modal-map-upload');
+    await expect(modal).toBeVisible({ timeout: 10000 });
     
-    // Click the close button (Bootstrap's close button)
-    const closeButton = page.locator('button.btn-close');
+    // Click the close button (Bootstrap's close button in the header)
+    const closeButton = page.locator('.modal-map-upload-header button[aria-label="Close"]');
     await expect(closeButton).toBeVisible();
     await closeButton.click();
     
-    // Wait for modal to close
-    await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+    // Wait for modal to close/disappear
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should close modal when Cancel button is clicked', async ({ page }) => {
@@ -119,16 +124,16 @@ test.describe('Heatmap Component', () => {
     await changeMapButton.click();
     
     // Wait for modal to appear
-    const modalTitle = page.getByText('Upload Map');
-    await expect(modalTitle).toBeVisible({ timeout: 10000 });
+    const modal = page.locator('.modal-map-upload');
+    await expect(modal).toBeVisible({ timeout: 10000 });
     
-    // Click the Cancel button
-    const cancelButton = page.getByRole('button', { name: 'Cancel' });
+    // Click the Cancel button - use more specific selector within modal
+    const cancelButton = page.locator('.modal-map-upload .cancel-btn');
     await expect(cancelButton).toBeVisible();
     await cancelButton.click();
     
     // Wait for modal to close
-    await expect(modalTitle).not.toBeVisible({ timeout: 10000 });
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
   });
 
   test('should display endpoint information section', async ({ page }) => {
@@ -150,11 +155,11 @@ test.describe('Heatmap Component', () => {
     await changeMapButton.click();
     
     // Wait for modal to appear
-    const modalTitle = page.getByText('Upload Map');
-    await expect(modalTitle).toBeVisible({ timeout: 10000 });
+    const modal = page.locator('.modal-map-upload');
+    await expect(modal).toBeVisible({ timeout: 10000 });
     
-    // Check accepted file types
-    const fileInput = page.locator('input[type="file"]');
+    // Check accepted file types - locate within modal
+    const fileInput = page.locator('.modal-map-upload input[type="file"]');
     await expect(fileInput).toBeVisible();
     const acceptAttr = await fileInput.getAttribute('accept');
     
@@ -170,11 +175,11 @@ test.describe('Heatmap Component', () => {
     await changeMapButton.click();
     
     // Wait for modal to appear
-    const modalTitle = page.getByText('Upload Map');
-    await expect(modalTitle).toBeVisible({ timeout: 10000 });
+    const modal = page.locator('.modal-map-upload');
+    await expect(modal).toBeVisible({ timeout: 10000 });
     
-    // Check if upload button is disabled (use class selector since there are multiple buttons)
-    const uploadButton = page.locator('.upload-btn');
+    // Check if upload button is disabled - locate within modal
+    const uploadButton = page.locator('.modal-map-upload .upload-btn');
     await expect(uploadButton).toBeVisible();
     await expect(uploadButton).toBeDisabled();
   });
