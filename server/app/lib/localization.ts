@@ -224,15 +224,15 @@ export function averagePositions(positions: Position[]): Position {
     (acc, pos) => ({
       x: acc.x + pos.x,
       y: acc.y + pos.y,
-      z: (acc.z || 0) + (pos.z || 0)
+      z: (acc.z ?? 0) + (pos.z || 0)
     }),
-    { x: 0, y: 0, z: 0 }
+    { x: 0, y: 0, z: 0 as number }
   );
 
   return {
     x: sum.x / positions.length,
     y: sum.y / positions.length,
-    z: (sum.z || 0) / positions.length
+    z: (sum.z ?? 0) / positions.length
   };
 }
 

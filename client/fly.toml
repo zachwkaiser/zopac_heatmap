@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for client-rough-sea-4799 on 2025-11-22T19:12:09-05:00
+# fly.toml app configuration file generated for seng401-project-zopac-client on 2025-11-24T18:10:42-05:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'client-rough-sea-4799'
+app = 'seng401-project-zopac-client'
 primary_region = 'iad'
 
 [build]
