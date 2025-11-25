@@ -1,54 +1,42 @@
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
+import postgres from 'postgres';
 
 /**
- * Secure proxy route for client-side access to endpoint positions
- * This route uses the API key server-side and forwards the request to the endpoint route
- * The API key never leaves the server - it's never exposed to the client
+ * Client-accessible route for endpoint positions
+ * Directly accesses the database without requiring API key from client
  */
 
 // GET /api/client/positions - Fetch endpoint positions
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Build the internal endpoint URL
-    const endpointUrl = new URL('/api/endpoint/positions', request.url);
-
-    // Get the API key from environment variables (server-side only)
-    const apiKey = process.env.ENDPOINT_API_KEY || process.env.API_KEY || process.env.AUTH_SECRET;
-
-    if (!apiKey) {
-      console.error('API key not found in environment variables');
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Server configuration error' 
-        },
-        { status: 500 }
-      );
-    }
-
-    // Make internal request to the endpoint route with the API key
-    const response = await fetch(endpointUrl.toString(), {
-      method: 'GET',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
+    const sql = postgres({
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      database: process.env.POSTGRES_DATABASE,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: false,
     });
 
-    // Forward the response to the client
-    const data = await response.json();
-    
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
+    const positions = await sql`
+      SELECT endpoint_id, x, y, z, is_active, created_at, updated_at
+      FROM endpoint_positions
+      ORDER BY endpoint_id;
+    `;
 
-    return NextResponse.json(data);
+    await sql.end();
+
+    return NextResponse.json({
+      success: true,
+      count: positions.length,
+      positions: positions
+    });
   } catch (error) {
-    console.error('Error fetching endpoint positions via proxy:', error);
+    console.error('Error fetching endpoint positions:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to fetch endpoint positions',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -60,49 +48,77 @@ export async function GET(request: NextRequest) {
 // PUT /api/client/positions - Update endpoint position
 export async function PUT(request: NextRequest) {
   try {
-    // Get the request body from the client
     const body = await request.json();
 
-    // Build the internal endpoint URL
-    const endpointUrl = new URL('/api/endpoint/positions', request.url);
-
-    // Get the API key from environment variables (server-side only)
-    const apiKey = process.env.ENDPOINT_API_KEY || process.env.API_KEY || process.env.AUTH_SECRET;
-
-    if (!apiKey) {
-      console.error('API key not found in environment variables');
+    if (!body.endpoint_id || typeof body.endpoint_id !== 'string') {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Server configuration error' 
+        {
+          success: false,
+          error: 'endpoint_id is required and must be a string'
         },
-        { status: 500 }
+        { status: 400 }
+      );
+    }
+    if (body.x === undefined || typeof body.x !== 'number') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'x coordinate is required and must be a number'
+        },
+        { status: 400 }
+      );
+    }
+    if (body.y === undefined || typeof body.y !== 'number') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'y coordinate is required and must be a number'
+        },
+        { status: 400 }
       );
     }
 
-    // Make internal request to the endpoint route with the API key
-    const response = await fetch(endpointUrl.toString(), {
-      method: 'PUT',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const sql = postgres({
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      database: process.env.POSTGRES_DATABASE,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: false,
     });
 
-    // Forward the response to the client
-    const data = await response.json();
-    
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
+    const result = await sql`
+      UPDATE endpoint_positions
+      SET 
+        x = ${body.x},
+        y = ${body.y},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE endpoint_id = ${body.endpoint_id}
+      RETURNING *;
+    `;
+
+    await sql.end();
+
+    if (result.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Endpoint position not found'
+        },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json({
+      success: true,
+      message: `Updated endpoint position for ${body.endpoint_id}`,
+      data: result[0]
+    });
   } catch (error) {
-    console.error('Error updating endpoint position via proxy:', error);
+    console.error('Error updating endpoint position:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to update endpoint position',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -114,50 +130,93 @@ export async function PUT(request: NextRequest) {
 // POST /api/client/positions - Create/batch update endpoint positions
 export async function POST(request: NextRequest) {
   try {
-    // Get the request body from the client
     const body = await request.json();
 
-    // Build the internal endpoint URL
-    const endpointUrl = new URL('/api/endpoint/positions', request.url);
+    // Support single position or batch
+    const positions = Array.isArray(body) ? body : [body];
 
-    // Get the API key from environment variables (server-side only)
-    const apiKey = process.env.ENDPOINT_API_KEY || process.env.API_KEY || process.env.AUTH_SECRET;
+    // Validate each position
+    const errors: string[] = [];
+    positions.forEach((pos, index) => {
+      if (!pos.endpoint_id || typeof pos.endpoint_id !== 'string') {
+        errors.push(`Position ${index}: endpoint_id is required and must be a string`);
+      }
+      if (pos.x === undefined || typeof pos.x !== 'number') {
+        errors.push(`Position ${index}: x coordinate is required and must be a number`);
+      }
+      if (pos.y === undefined || typeof pos.y !== 'number') {
+        errors.push(`Position ${index}: y coordinate is required and must be a number`);
+      }
+      if (pos.z !== undefined && typeof pos.z !== 'number') {
+        errors.push(`Position ${index}: z coordinate must be a number`);
+      }
+      if (pos.floor !== undefined && typeof pos.floor !== 'number') {
+        errors.push(`Position ${index}: floor must be a number`);
+      }
+    });
 
-    if (!apiKey) {
-      console.error('API key not found in environment variables');
+    if (errors.length > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Server configuration error' 
+        {
+          success: false,
+          error: 'Validation failed',
+          details: errors
         },
-        { status: 500 }
+        { status: 400 }
       );
     }
 
-    // Make internal request to the endpoint route with the API key
-    const response = await fetch(endpointUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
+    const sql = postgres({
+      host: process.env.POSTGRES_HOST,
+      port: 5432,
+      database: process.env.POSTGRES_DATABASE,
+      username: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: false,
     });
 
-    // Forward the response to the client
-    const data = await response.json();
-    
-    if (!response.ok) {
-      return NextResponse.json(data, { status: response.status });
-    }
+    // Insert or update positions
+    const results = await Promise.all(
+      positions.map(async (pos) => {
+        const result = await sql`
+          INSERT INTO endpoint_positions (endpoint_id, x, y, z, floor_number, updated_at)
+          VALUES (
+            ${pos.endpoint_id},
+            ${pos.x},
+            ${pos.y},
+            ${pos.z || 0},
+            ${pos.floor || 1},
+            CURRENT_TIMESTAMP
+          )
+          ON CONFLICT (endpoint_id) 
+          DO UPDATE SET
+            x = EXCLUDED.x,
+            y = EXCLUDED.y,
+            z = EXCLUDED.z,
+            floor_number = EXCLUDED.floor_number,
+            updated_at = CURRENT_TIMESTAMP
+          RETURNING *;
+        `;
+        return result[0];
+      })
+    );
 
-    return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error creating endpoint positions via proxy:', error);
+    await sql.end();
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to create endpoint positions',
+      {
+        success: true,
+        message: `Successfully stored ${results.length} endpoint position(s)`,
+        data: results
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error storing endpoint positions:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to store endpoint positions',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
