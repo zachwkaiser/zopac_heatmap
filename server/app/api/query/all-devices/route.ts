@@ -35,7 +35,7 @@ async function calculateLocation(
       ep.x,
       ep.y,
       ep.z,
-      ep.floor
+      ep.floor_number
     FROM wifi_scans ws
     JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
     WHERE ws.mac = ${mac}
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
         JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
         WHERE ws.timestamp >= ${cutoffTime}
           AND ws.rssi >= ${minRssi}
-          AND ep.floor = ${floor}
+          AND ep.floor_number = ${floor}
         ORDER BY ws.mac
       `;
     } else {

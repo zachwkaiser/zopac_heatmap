@@ -57,7 +57,7 @@ export async function GET(request: Request) {
         ep.x,
         ep.y,
         ep.z,
-        ep.floor
+        ep.floor_number
       FROM wifi_scans ws
       JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
       WHERE ws.mac = ${mac}
@@ -193,7 +193,7 @@ export async function POST(request: Request) {
         ep.x,
         ep.y,
         ep.z,
-        ep.floor
+        ep.floor_number
       FROM wifi_scans ws
       JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
       WHERE ws.mac = ANY(${macs})
