@@ -92,6 +92,26 @@ function HeatMapPage() {
   };
 
   // Function to create heatmap instance and fetch data from API
+  // Function to fetch and update heatmap data
+  const updateHeatmapData = async () => {
+    if (!heatmapInstanceRef.current) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/query/heatmap-data`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Update the heatmap with new data
+        heatmapInstanceRef.current.setData(result.data);
+        console.log('Heatmap data updated:', result.count, 'points');
+      } else {
+        console.error('Failed to load heatmap data:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching heatmap data:', error);
+    }
+  };
+
   const createHeatmapInstance = async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
@@ -113,25 +133,8 @@ function HeatMapPage() {
     const heatmapInstance = window.h337.create(config);
     heatmapInstanceRef.current = heatmapInstance;
 
-    // Fetch data from API
-    try {
-      const response = await fetch(`${API_URL}/api/query/heatmap-data`);
-      const result = await response.json();
-      
-      if (result.success && result.data) {
-        // Set the data from API to display the heatmap
-        heatmapInstance.setData(result.data);
-        console.log('Heatmap data loaded from database:', result.count, 'points');
-      } else {
-        console.error('Failed to load heatmap data:', result.error);
-        // Fallback to empty data
-        heatmapInstance.setData({ max: 100, min: 0, data: [] });
-      }
-    } catch (error) {
-      console.error('Error fetching heatmap data:', error);
-      // Fallback to empty data
-      heatmapInstance.setData({ max: 100, min: 0, data: [] });
-    }
+    // Initial data fetch
+    await updateHeatmapData();
   };
 
   useEffect(() => {
@@ -190,6 +193,20 @@ function HeatMapPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
+
+  // Auto-refresh heatmap data every 5 seconds
+  useEffect(() => {
+    if (!heatmapInstanceRef.current) return;
+
+    const intervalId = setInterval(() => {
+      updateHeatmapData();
+    }, 2000); // Update every 2 seconds
+
+    return () => {
+      clearInterval(intervalId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heatmapInstanceRef.current]);
 
   // Handle modal close - reset selected file
   const handleCloseModal = () => {
