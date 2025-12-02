@@ -93,14 +93,14 @@ export async function GET(request: NextRequest) {
         const position = trilaterate(scansWithDistance);
         
         if (position) {
-          // Use the strongest (least negative) RSSI from the most recent scans for heat intensity
+          // Use uniform value for all devices so heatmap shows density, not signal strength
           const maxRssi = Math.max(...scanList.map(s => s.rssi));
           const latestTimestamp = Math.max(...scanList.map(s => new Date(s.timestamp).getTime()));
           
           heatmapData.push({
             x: Math.round(position.x),
             y: Math.round(position.y),
-            value: Math.max(0, 100 + maxRssi), // Convert RSSI to 0-100 scale
+            value: 100, // Uniform value - color will represent device density
             mac: mac,
             rssi: maxRssi,
             timestamp: new Date(latestTimestamp).toISOString(),
