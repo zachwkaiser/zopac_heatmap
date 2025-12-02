@@ -103,10 +103,8 @@ function HeatMapPage() {
       minOpacity: 0,
       blur: 0.75,
       gradient: {
-        '.4': 'blue',
-        '.6': 'cyan',
-        '.7': 'lime',
-        '.8': 'yellow',
+        '0.0': 'green',
+        '0.5': 'yellow',
         '1.0': 'red'
       }
     };
