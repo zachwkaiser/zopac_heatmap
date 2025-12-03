@@ -200,7 +200,7 @@ function HeatMapPage() {
 
     const intervalId = setInterval(() => {
       updateHeatmapData();
-    }, 2000); // Update every 10 seconds
+    }, 10000); // Update every 10 seconds
 
     return () => {
       clearInterval(intervalId);
