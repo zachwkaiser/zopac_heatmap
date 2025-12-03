@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       ssl: false,
+      max: 1, // Single connection to reduce memory
+      idle_timeout: 20,
+      connect_timeout: 10,
     });
 
     const { searchParams } = new URL(request.url);
@@ -47,7 +50,7 @@ export async function GET(request: NextRequest) {
         ORDER BY ws.endpoint_id, ws.timestamp DESC
       `;
     } else {
-      // Get latest scans for each device from each endpoint
+      // Get latest scans for each device from each endpoint (limit to recent data)
       scans = await sql`
         SELECT DISTINCT ON (ws.mac, ws.endpoint_id)
           ws.mac,
@@ -59,8 +62,10 @@ export async function GET(request: NextRequest) {
           ep.z
         FROM wifi_scans ws
         LEFT JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
-        WHERE ep.is_active = true
+        WHERE ep.is_active = true 
+          AND ws.created_at >= NOW() - INTERVAL '5 minutes'
         ORDER BY ws.mac, ws.endpoint_id, ws.timestamp DESC
+        LIMIT 1000
       `;
     }
 
