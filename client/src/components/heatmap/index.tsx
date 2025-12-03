@@ -194,19 +194,21 @@ function HeatMapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
-  // Auto-refresh heatmap data every 5 seconds
+  // Auto-refresh heatmap data every 2 seconds
   useEffect(() => {
-    if (!heatmapInstanceRef.current) return;
+    // Start interval once heatmap is ready
+    if (!uploadedImage) return;
 
     const intervalId = setInterval(() => {
+      console.log('Auto-refresh triggered');
       updateHeatmapData();
-    }, 10000); // Update every 10 seconds
+    }, 2000); // Update every 2 seconds
 
     return () => {
       clearInterval(intervalId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heatmapInstanceRef.current]);
+  }, [uploadedImage]);
 
   // Handle modal close - reset selected file
   const handleCloseModal = () => {
