@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import postgres from 'postgres';
 import { rssiToDistance, trilaterate } from '@/app/lib/localization';
+import { getDb } from '@/app/lib/db';
 
 interface ScanData {
   mac: string;
@@ -16,17 +16,7 @@ interface ScanData {
 // Returns wifi scan data formatted for heatmap visualization
 export async function GET(request: NextRequest) {
   try {
-    const sql = postgres({
-      host: process.env.POSTGRES_HOST,
-      port: 5432,
-      database: process.env.POSTGRES_DATABASE,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      ssl: false,
-      max: 1, // Single connection to reduce memory
-      idle_timeout: 20,
-      connect_timeout: 10,
-    });
+    const sql = getDb();
 
     const { searchParams } = new URL(request.url);
     const mac = searchParams.get('mac'); // Optional: filter by specific MAC address
@@ -114,8 +104,6 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-
-    await sql.end();
 
     return NextResponse.json({
       success: true,

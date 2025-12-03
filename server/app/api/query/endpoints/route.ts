@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server';
-import postgres from 'postgres';
+import { getDb } from '@/app/lib/db';
 
 // GET /api/query/endpoints
 // Returns all endpoint positions (public endpoint for client use)
 export async function GET() {
   try {
-    const sql = postgres({
-      host: process.env.POSTGRES_HOST,
-      port: 5432,
-      database: process.env.POSTGRES_DATABASE,
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      ssl: false,
-    });
+    const sql = getDb();
 
     const positions = await sql`
       SELECT 
@@ -26,8 +19,6 @@ export async function GET() {
       FROM endpoint_positions
       ORDER BY endpoint_id
     `;
-
-    await sql.end();
 
     return NextResponse.json({
       success: true,
