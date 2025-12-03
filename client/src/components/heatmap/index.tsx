@@ -191,7 +191,6 @@ function HeatMapPage() {
         heatmapInstanceRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uploadedImage]);
 
   // Auto-refresh heatmap data every 2 seconds
