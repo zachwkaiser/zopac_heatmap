@@ -1,9 +1,9 @@
 import postgres from 'postgres';
 
 // Background task to automatically clean up old WiFi scans
-// Runs every minute and deletes scans older than 7 days
+// Runs every hour and deletes scans older than 7 days
 
-const CLEANUP_INTERVAL = 60 * 1000; // 1 minute in milliseconds
+const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
 const DAYS_TO_KEEP = 7;
 
 let cleanupInterval: NodeJS.Timeout | null = null;
@@ -25,10 +25,10 @@ async function cleanupOldScans() {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - DAYS_TO_KEEP);
 
-      // Delete old wifi_scans
+      // Delete old wifi_scans based on created_at (when inserted)
       const deletedScans = await sql`
         DELETE FROM wifi_scans
-        WHERE timestamp < ${cutoffDate.toISOString()}
+        WHERE created_at < ${cutoffDate.toISOString()}
         RETURNING id
       `;
 
@@ -55,12 +55,11 @@ export function startAutoCleanup() {
     return;
   }
 
-  console.log(`[Cleanup] Starting auto-cleanup (every ${CLEANUP_INTERVAL / 1000}s, keeping ${DAYS_TO_KEEP} days)`);
+  console.log(`[Cleanup] Starting auto-cleanup (every ${CLEANUP_INTERVAL / 1000 / 60}min, keeping ${DAYS_TO_KEEP} days)`);
   
-  // Run immediately on startup
-  cleanupOldScans();
+  // Don't run immediately on startup to avoid memory pressure during initialization
   
-  // Then run every minute
+  // Run every hour
   cleanupInterval = setInterval(cleanupOldScans, CLEANUP_INTERVAL);
 }
 
