@@ -143,9 +143,9 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
         </div>
         <button type="submit">Log In</button>
       </form>
-      <button className="toggle-button" onClick={handleOpenSignup}>
+      {/* <button className="toggle-button" onClick={handleOpenSignup}>
         Create an Account
-      </button>
+      </button> */}
 
       {isSignupOpen && (
         <div
