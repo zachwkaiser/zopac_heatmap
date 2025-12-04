@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rssiToDistance, trilaterate } from '@/app/lib/localization';
-import { getDb } from '@/app/lib/db';
+import { getDb, resetDb } from '@/app/lib/db';
 
 interface ScanData {
   mac: string;
@@ -15,8 +15,12 @@ interface ScanData {
 // GET /api/query/heatmap-data
 // Returns wifi scan data formatted for heatmap visualization
 export async function GET(request: NextRequest) {
-  try {
-    const sql = getDb();
+  let retries = 0;
+  const maxRetries = 2;
+
+  while (retries <= maxRetries) {
+    try {
+      const sql = getDb();
 
     const { searchParams } = new URL(request.url);
     const mac = searchParams.get('mac'); // Optional: filter by specific MAC address
@@ -114,15 +118,33 @@ export async function GET(request: NextRequest) {
         data: heatmapData
       }
     });
-  } catch (error) {
-    console.error('Heatmap data error:', error);
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to fetch heatmap data',
-        details: error instanceof Error ? error.message : String(error)
-      },
-      { status: 500 }
-    );
+    } catch (error) {
+      console.error('Heatmap data error:', error);
+      
+      // If connection error and we have retries left, reset connection and retry
+      if (retries < maxRetries && error instanceof Error && 
+          (error.message.includes('TIMEOUT') || error.message.includes('CONNECTION'))) {
+        console.log(`[Heatmap] Retrying after connection error (attempt ${retries + 1}/${maxRetries})`);
+        resetDb();
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay
+        continue;
+      }
+      
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Failed to fetch heatmap data',
+          details: error instanceof Error ? error.message : String(error)
+        },
+        { status: 500 }
+      );
+    }
   }
+  
+  // Should never reach here
+  return NextResponse.json(
+    { success: false, error: 'Max retries exceeded' },
+    { status: 500 }
+  );
 }
