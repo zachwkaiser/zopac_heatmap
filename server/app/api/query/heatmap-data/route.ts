@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
           heatmapData.push({
             x: Math.round(position.x),
             y: Math.round(position.y),
-            value: 100, // Uniform value - color will represent device density
+            value: 30, // Uniform value - color will represent device density
             mac: mac,
             rssi: maxRssi,
             timestamp: new Date(latestTimestamp).toISOString(),
