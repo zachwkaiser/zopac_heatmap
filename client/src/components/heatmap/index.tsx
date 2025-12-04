@@ -100,7 +100,7 @@ function HeatMapPage() {
     // Create heatmap configuration
     const config: HeatmapConfig = {
       container: heatmapContainerRef.current,
-      radius: 50,
+      radius: 30,
       maxOpacity: 0.8,
       minOpacity: 0.1,
       blur: 0.85,
