@@ -3,12 +3,11 @@
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    console.log('[Server] Initializing background tasks...');
+    console.log('[Server] Initializing...');
     
-    // Import and start auto-cleanup
-    const { startAutoCleanup } = await import('./app/lib/auto-cleanup');
-    startAutoCleanup();
+    // Auto-cleanup disabled to prevent OOM on 256MB database
+    // Use POST /api/admin/cleanup endpoint to manually clean old data
     
-    console.log('[Server] Background tasks initialized');
+    console.log('[Server] Initialized (auto-cleanup disabled)');
   }
 }

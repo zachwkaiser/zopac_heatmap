@@ -15,14 +15,19 @@ interface ScanData {
 // GET /api/query/heatmap-data
 // Returns wifi scan data formatted for heatmap visualization
 export async function GET(request: NextRequest) {
+  let sql;
   try {
-    const sql = postgres({
+    // Create minimal single-use connection
+    sql = postgres({
       host: process.env.POSTGRES_HOST,
       port: 5432,
       database: process.env.POSTGRES_DATABASE,
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       ssl: false,
+      max: 1,
+      idle_timeout: 5,
+      connect_timeout: 5,
     });
 
     const { searchParams } = new URL(request.url);
@@ -47,7 +52,7 @@ export async function GET(request: NextRequest) {
         ORDER BY ws.endpoint_id, ws.timestamp DESC
       `;
     } else {
-      // Get latest scans for each device from each endpoint
+      // Get latest scans for each device from each endpoint (limit to recent data)
       scans = await sql`
         SELECT DISTINCT ON (ws.mac, ws.endpoint_id)
           ws.mac,
@@ -59,8 +64,10 @@ export async function GET(request: NextRequest) {
           ep.z
         FROM wifi_scans ws
         LEFT JOIN endpoint_positions ep ON ws.endpoint_id = ep.endpoint_id
-        WHERE ep.is_active = true
+        WHERE ep.is_active = true 
+          AND ws.created_at >= NOW() - INTERVAL '5 minutes'
         ORDER BY ws.mac, ws.endpoint_id, ws.timestamp DESC
+        LIMIT 1000
       `;
     }
 
@@ -100,7 +107,7 @@ export async function GET(request: NextRequest) {
           heatmapData.push({
             x: Math.round(position.x),
             y: Math.round(position.y),
-            value: 100, // Uniform value - color will represent device density
+            value: 30, // Uniform value - color will represent device density
             mac: mac,
             rssi: maxRssi,
             timestamp: new Date(latestTimestamp).toISOString(),
@@ -110,7 +117,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    await sql.end();
+    // Close connection immediately
+    await sql.end({ timeout: 2 });
 
     return NextResponse.json({
       success: true,
@@ -123,6 +131,12 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Heatmap data error:', error);
+    
+    // Ensure connection is closed
+    if (sql) {
+      try { await sql.end({ timeout: 1 }); } catch {}
+    }
+    
     return NextResponse.json(
       { 
         success: false,

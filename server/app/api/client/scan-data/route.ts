@@ -13,8 +13,10 @@ export async function GET(request: NextRequest) {
     const endpoint_id = searchParams.get('endpoint_id');
     const limit = searchParams.get('limit') || '100';
 
-    // Build the internal endpoint URL
-    const endpointUrl = new URL('/api/endpoint/scan-data', request.url);
+    // Build the internal endpoint URL using localhost for internal routing
+    const protocol = process.env.NODE_ENV === 'production' ? 'http' : 'http';
+    const host = 'localhost:3000';
+    const endpointUrl = new URL(`${protocol}://${host}/api/endpoint/scan-data`);
     if (endpoint_id) endpointUrl.searchParams.set('endpoint_id', endpoint_id);
     endpointUrl.searchParams.set('limit', limit);
 

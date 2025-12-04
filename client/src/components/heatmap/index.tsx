@@ -97,7 +97,7 @@ function HeatMapPage() {
   const createHeatmapInstance = useCallback(async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
-    // Create heatmap configuration
+    // Create heatmap configuration with blob-like appearance
     const config: HeatmapConfig = {
       container: heatmapContainerRef.current,
       radius: 30,
@@ -105,9 +105,9 @@ function HeatMapPage() {
       minOpacity: 0.1,
       blur: 0.85,
       gradient: {
-        '0.0': 'green',
-        '0.5': 'yellow',
-        '1.0': 'red'
+        '0.0': 'green',    // Low density
+        '0.5': 'yellow',   // Medium density
+        '1.0': 'red'       // High density
       }
     };
 
