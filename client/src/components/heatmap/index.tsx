@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Row, Col, Button, Form, Modal } from 'react-bootstrap';
 import './style.css';
 import { getScanData } from './getData';
@@ -73,27 +73,8 @@ function HeatMapPage() {
   const heatmapInstanceRef = useRef<HeatmapInstance | null>(null);
 
 
-  // Function to initialize and display heatmap with hardcoded example data
-  const initializeHeatmap = () => {
-    // Don't initialize if heatmap already exists
-    if (heatmapInstanceRef.current) return;
-
-    // Load heatmap.js library dynamically
-    if (!window.h337 && heatmapContainerRef.current) {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/gh/pa7/heatmap.js@master/build/heatmap.min.js';
-      script.onload = () => {
-        createHeatmapInstance();
-      };
-      document.body.appendChild(script);
-    } else if (window.h337 && heatmapContainerRef.current) {
-      createHeatmapInstance();
-    }
-  };
-
-  // Function to create heatmap instance and fetch data from API
   // Function to fetch and update heatmap data
-  const updateHeatmapData = async () => {
+  const updateHeatmapData = useCallback(async () => {
     if (!heatmapInstanceRef.current) return;
 
     try {
@@ -110,18 +91,19 @@ function HeatMapPage() {
     } catch (error) {
       console.error('Error fetching heatmap data:', error);
     }
-  };
+  }, []);
 
-  const createHeatmapInstance = async () => {
+  // Function to create heatmap instance and fetch data from API
+  const createHeatmapInstance = useCallback(async () => {
     if (!window.h337 || !heatmapContainerRef.current) return;
 
     // Create heatmap configuration with blob-like appearance
     const config: HeatmapConfig = {
       container: heatmapContainerRef.current,
-      radius: 50, // Larger radius for blob-like appearance
+      radius: 30,
       maxOpacity: 0.8,
       minOpacity: 0.1,
-      blur: 0.85, // Higher blur for smoother blobs
+      blur: 0.85,
       gradient: {
         '0.0': 'green',    // Low density
         '0.5': 'yellow',   // Medium density
@@ -135,7 +117,25 @@ function HeatMapPage() {
 
     // Initial data fetch
     await updateHeatmapData();
-  };
+  }, [updateHeatmapData]);
+
+  // Function to initialize and display heatmap
+  const initializeHeatmap = useCallback(() => {
+    // Don't initialize if heatmap already exists
+    if (heatmapInstanceRef.current) return;
+
+    // Load heatmap.js library dynamically
+    if (!window.h337 && heatmapContainerRef.current) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/gh/pa7/heatmap.js@master/build/heatmap.min.js';
+      script.onload = () => {
+        createHeatmapInstance();
+      };
+      document.body.appendChild(script);
+    } else if (window.h337 && heatmapContainerRef.current) {
+      createHeatmapInstance();
+    }
+  }, [createHeatmapInstance]);
 
   useEffect(() => {
     // .then is the syntax for getting the data from the promise
@@ -191,22 +191,22 @@ function HeatMapPage() {
         heatmapInstanceRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uploadedImage]);
+  }, [uploadedImage, initializeHeatmap]);
 
-  // Auto-refresh heatmap data every 5 seconds
+  // Auto-refresh heatmap data every 2 seconds
   useEffect(() => {
-    if (!heatmapInstanceRef.current) return;
+    // Start interval once heatmap is ready
+    if (!uploadedImage) return;
 
     const intervalId = setInterval(() => {
+      console.log('Auto-refresh triggered');
       updateHeatmapData();
-    }, 10000); // Update every 10 seconds
+    }, 2000); // Update every 2 seconds
 
     return () => {
       clearInterval(intervalId);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heatmapInstanceRef.current]);
+  }, [uploadedImage, updateHeatmapData]);
 
   // Handle modal close - reset selected file
   const handleCloseModal = () => {
