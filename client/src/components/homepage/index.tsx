@@ -47,9 +47,9 @@ function HomePage({ setIsAuthenticated, isAuthenticated }: HomePageProps) {
     }
   };
 
-  const handleOpenSignup = () => {
-    setIsSignupOpen(true);
-  };
+  // const handleOpenSignup = () => {
+  //   setIsSignupOpen(true);
+  // };
 
   const handleCloseSignup = () => {
     setIsSignupOpen(false);
